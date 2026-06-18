@@ -330,3 +330,18 @@ ros2 run amr_tools health_report --duration 1.0
 6. rosbag으로 기록합니다.
 7. README/docs를 같이 갱신합니다.
 8. 커밋 메시지는 기능 단위로 작성합니다.
+
+## 10. GitHub Actions CI
+
+이 저장소는 `.github/workflows/ci.yml`을 사용합니다.
+
+CI에서 확인하는 것:
+
+- Python launch/tool 문법 검사
+- XML/SDF/URDF/xacro 파싱 검사
+- Ubuntu 24.04 runner에서 ROS 2 Jazzy apt repository 설정
+- `rosdep install --from-paths src --ignore-src -r -y --rosdistro jazzy`
+- `colcon build --symlink-install`
+- `colcon test`
+
+CI 결과는 GitHub 저장소의 `Actions` 탭에서 볼 수 있습니다.

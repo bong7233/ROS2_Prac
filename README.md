@@ -1,5 +1,7 @@
 # ROS2_Prac
 
+[![CI](https://github.com/bong7233/ROS2_Prac/actions/workflows/ci.yml/badge.svg)](https://github.com/bong7233/ROS2_Prac/actions/workflows/ci.yml)
+
 Linux PC 기반 AGV/AMR 제어 프로그램을 ROS 2 구조로 다시 설계하고 구현하는 포트폴리오 프로젝트입니다.
 
 English documentation: [README.en.md](README.en.md)
@@ -148,6 +150,8 @@ ROS2_Prac/
 ## Current Implementation
 
 현재 코드는 실제 장비 없이 실행 가능한 mock AMR stack입니다.
+
+GitHub Actions CI가 `ubuntu-24.04`에서 정적 검증과 ROS 2 Jazzy `colcon build/test`를 실행합니다.
 
 | Package | Language | Status | Purpose |
 | --- | --- | --- | --- |

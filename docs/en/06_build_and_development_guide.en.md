@@ -129,3 +129,18 @@ ros2 interface show amr_interfaces/srv/InjectMotorFault
 ros2 param list /safety_monitor
 ros2 run tf2_ros tf2_echo odom base_link
 ```
+
+## 7. GitHub Actions CI
+
+The repository uses `.github/workflows/ci.yml`.
+
+The CI workflow checks:
+
+- Python launch/tool syntax
+- XML/SDF/URDF/xacro parsing
+- ROS 2 Jazzy apt repository setup on an Ubuntu 24.04 runner
+- `rosdep install --from-paths src --ignore-src -r -y --rosdistro jazzy`
+- `colcon build --symlink-install`
+- `colcon test`
+
+CI results are available in the repository `Actions` tab.

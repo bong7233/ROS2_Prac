@@ -1,5 +1,7 @@
 # ROS2_Prac
 
+[![CI](https://github.com/bong7233/ROS2_Prac/actions/workflows/ci.yml/badge.svg)](https://github.com/bong7233/ROS2_Prac/actions/workflows/ci.yml)
+
 Korean documentation: [README.md](README.md)
 
 ROS2_Prac is a ROS 2 portfolio project that redesigns a Linux PC based AGV/AMR control program using modern ROS 2 architecture.
@@ -20,6 +22,8 @@ The project starts from a realistic industrial robot layout: a robot PC, serial 
 ## Current Implementation
 
 The repository currently contains a runnable mock AMR stack.
+
+GitHub Actions CI runs static checks and a ROS 2 Jazzy `colcon build/test` on `ubuntu-24.04`.
 
 | Package | Language | Purpose |
 | --- | --- | --- |
