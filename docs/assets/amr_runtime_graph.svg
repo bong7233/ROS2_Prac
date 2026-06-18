@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+  <title id="title">ROS2_Prac AMR runtime graph</title>
+  <desc id="desc">Runtime graph showing command, safety, control, drivers, diagnostics, and FAE tooling.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2f3a4a"/>
+    </marker>
+    <style>
+      .bg { fill: #f7f8fb; }
+      .band { fill: #ffffff; stroke: #c8d0dc; stroke-width: 2; rx: 14; }
+      .node { fill: #eaf2ff; stroke: #2f6fbd; stroke-width: 2; rx: 10; }
+      .driver { fill: #eff8f1; stroke: #2f8d59; stroke-width: 2; rx: 10; }
+      .tool { fill: #fff4dc; stroke: #c57b13; stroke-width: 2; rx: 10; }
+      .topic { fill: #ffffff; stroke: #6b7280; stroke-width: 1.5; rx: 8; }
+      .text { font: 16px Arial, sans-serif; fill: #172033; }
+      .small { font: 13px Arial, sans-serif; fill: #475569; }
+      .label { font: bold 18px Arial, sans-serif; fill: #172033; }
+      .line { stroke: #2f3a4a; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .dash { stroke-dasharray: 7 6; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1280" height="760"/>
+  <text class="label" x="40" y="46">ROS2_Prac Mock AMR Runtime Graph</text>
+  <text class="small" x="40" y="72">C++ runtime nodes with Python launch and FAE field-support tooling</text>
+
+  <rect class="band" x="40" y="105" width="360" height="555"/>
+  <text class="label" x="68" y="140">Operator and FAE Tools</text>
+
+  <rect class="tool" x="75" y="175" width="285" height="70"/>
+  <text class="text" x="98" y="205">/cmd_vel publisher</text>
+  <text class="small" x="98" y="229">CLI, future Qt UI, Nav2 later</text>
+
+  <rect class="tool" x="75" y="285" width="285" height="82"/>
+  <text class="text" x="98" y="316">amr_tools fault_scenario</text>
+  <text class="small" x="98" y="340">estop, battery, motor fault injection</text>
+
+  <rect class="tool" x="75" y="410" width="285" height="82"/>
+  <text class="text" x="98" y="441">amr_tools health_report</text>
+  <text class="small" x="98" y="465">topic freshness and diagnostics summary</text>
+
+  <rect class="band" x="460" y="105" width="365" height="555"/>
+  <text class="label" x="488" y="140">Safety and Control</text>
+
+  <rect class="node" x="500" y="175" width="285" height="78"/>
+  <text class="text" x="526" y="207">safety_monitor</text>
+  <text class="small" x="526" y="231">gates /cmd_vel into /cmd_vel_safe</text>
+
+  <rect class="node" x="500" y="325" width="285" height="78"/>
+  <text class="text" x="526" y="357">diff_drive_base_controller</text>
+  <text class="small" x="526" y="381">wheel command, odometry, TF</text>
+
+  <rect class="node" x="500" y="505" width="285" height="78"/>
+  <text class="text" x="526" y="537">system_manager</text>
+  <text class="small" x="526" y="561">robot mode and fault aggregation</text>
+
+  <rect class="band" x="885" y="105" width="355" height="555"/>
+  <text class="label" x="913" y="140">Mock Device Drivers</text>
+
+  <rect class="driver" x="925" y="175" width="275" height="70"/>
+  <text class="text" x="950" y="206">mock_battery_driver</text>
+  <text class="small" x="950" y="230">/battery_state</text>
+
+  <rect class="driver" x="925" y="285" width="275" height="70"/>
+  <text class="text" x="950" y="316">mock_io_driver</text>
+  <text class="small" x="950" y="340">/io_state, /set_input, /set_io</text>
+
+  <rect class="driver" x="925" y="395" width="275" height="70"/>
+  <text class="text" x="950" y="426">mock_motor_driver</text>
+  <text class="small" x="950" y="450">/motor_state, fault services</text>
+
+  <rect class="topic" x="925" y="530" width="275" height="68"/>
+  <text class="text" x="950" y="558">/diagnostics</text>
+  <text class="small" x="950" y="582">DiagnosticArray from runtime nodes</text>
+
+  <path class="line" d="M 360 210 H 490"/>
+  <path class="line" d="M 785 214 H 915"/>
+  <path class="line" d="M 925 210 H 795"/>
+  <path class="line" d="M 925 320 H 795"/>
+  <path class="line" d="M 925 430 H 795"/>
+  <path class="line" d="M 642 253 V 315"/>
+  <path class="line" d="M 785 365 H 915"/>
+  <path class="line" d="M 925 430 H 795"/>
+  <path class="line" d="M 642 403 V 495"/>
+  <path class="line dash" d="M 360 326 H 915"/>
+  <path class="line dash" d="M 1062 530 V 475"/>
+  <path class="line dash" d="M 360 451 H 915"/>
+  <path class="line dash" d="M 925 564 H 370"/>
+
+  <text class="small" x="418" y="198">/cmd_vel</text>
+  <text class="small" x="662" y="289">/cmd_vel_safe</text>
+  <text class="small" x="804" y="354">/wheel_command</text>
+  <text class="small" x="810" y="202">state topics</text>
+  <text class="small" x="397" y="313">fault injection services</text>
+  <text class="small" x="420" y="438">health subscriptions</text>
+</svg>

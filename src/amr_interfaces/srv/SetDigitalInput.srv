@@ -1,0 +1,6 @@
+uint16 channel
+bool value
+---
+bool success
+string message
+

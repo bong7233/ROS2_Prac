@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>amr_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch and configuration files for the ROS2_Prac AMR stack.</description>
+  <maintainer email="bong7233@example.com">bong7233</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>amr_base_controller</exec_depend>
+  <exec_depend>amr_battery_driver</exec_depend>
+  <exec_depend>amr_io_driver</exec_depend>
+  <exec_depend>amr_motor_driver</exec_depend>
+  <exec_depend>amr_safety_monitor</exec_depend>
+  <exec_depend>amr_system_manager</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
+

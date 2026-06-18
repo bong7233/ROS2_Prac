@@ -1,0 +1,6 @@
+uint32 fault_code
+string description
+---
+bool success
+string message
+

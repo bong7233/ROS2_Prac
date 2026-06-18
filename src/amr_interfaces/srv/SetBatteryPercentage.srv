@@ -1,0 +1,5 @@
+float64 percentage
+---
+bool success
+string message
+

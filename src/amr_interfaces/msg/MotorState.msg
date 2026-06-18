@@ -1,0 +1,15 @@
+std_msgs/Header header
+
+bool communication_ok
+bool drive_enabled
+bool fault_active
+uint32 fault_code
+
+float64 left_wheel_velocity_radps
+float64 right_wheel_velocity_radps
+float64 left_wheel_position_rad
+float64 right_wheel_position_rad
+
+float64 dc_bus_voltage_v
+float64 command_age_ms
+

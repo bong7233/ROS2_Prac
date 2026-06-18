@@ -1,0 +1,67 @@
+mock_battery_driver:
+  ros__parameters:
+    frame_id: battery_link
+    hardware_id: mock_bms
+    publish_rate_hz: 2.0
+    nominal_voltage_v: 24.0
+    initial_voltage_v: 24.0
+    empty_voltage_v: 20.0
+    low_voltage_v: 22.0
+    critical_voltage_v: 21.0
+    discharge_rate_vps: 0.0005
+    current_a: -3.5
+    temperature_c: 32.0
+
+mock_io_driver:
+  ros__parameters:
+    hardware_id: mock_io_board
+    publish_rate_hz: 10.0
+    input_count: 8
+    output_count: 8
+    estop_input_index: 0
+    protective_stop_input_index: 1
+    initial_estop_active: false
+    initial_protective_stop_active: false
+
+mock_motor_driver:
+  ros__parameters:
+    hardware_id: mock_motor_drive
+    publish_rate_hz: 50.0
+    command_timeout_ms: 200.0
+    velocity_time_constant_s: 0.08
+    max_velocity_radps: 20.0
+    dc_bus_voltage_v: 24.0
+    enable_on_start: true
+
+safety_monitor:
+  ros__parameters:
+    publish_rate_hz: 50.0
+    command_timeout_ms: 300.0
+    state_timeout_ms: 1000.0
+    low_battery_percentage: 0.20
+    critical_battery_percentage: 0.10
+    require_battery_state: true
+    require_io_state: true
+    require_motor_state: true
+    require_motor_enabled: true
+
+diff_drive_base_controller:
+  ros__parameters:
+    wheel_radius_m: 0.10
+    wheel_separation_m: 0.55
+    command_rate_hz: 50.0
+    command_timeout_ms: 250.0
+    max_linear_velocity_mps: 1.0
+    max_angular_velocity_radps: 1.5
+    max_wheel_accel_radps2: 40.0
+    odom_frame_id: odom
+    base_frame_id: base_link
+    publish_tf: true
+
+system_manager:
+  ros__parameters:
+    publish_rate_hz: 5.0
+    low_battery_percentage: 0.20
+    critical_battery_percentage: 0.10
+    initial_mode: 2
+

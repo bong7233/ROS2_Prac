@@ -1,0 +1,103 @@
+# ROS2_Prac
+
+Korean documentation: [README.md](README.md)
+
+ROS2_Prac is a ROS 2 portfolio project that redesigns a Linux PC based AGV/AMR control program using modern ROS 2 architecture.
+
+The project starts from a realistic industrial robot layout: a robot PC, serial BMS, TCP/IP IO board, CAN motor drive, and TCP/IP laser scanner. The first implementation does not jump directly into SLAM, Nav2, or OpenCV. Instead, it builds the AMR software foundation that those higher-level systems need: device driver nodes, safety command gating, odometry, diagnostics, launch/config management, and field-support tooling.
+
+## Technology Policy
+
+| Layer | Choice | Reason |
+| --- | --- | --- |
+| OS | Ubuntu 24.04 LTS | Stable target for ROS 2 Jazzy and common industrial PC deployments. |
+| ROS 2 | Jazzy Jalisco LTS | Mature LTS baseline with support until May 2029. |
+| Runtime language | C++17 | Appropriate for drivers, control loops, safety gate, odometry, and Qt integration. |
+| Tooling language | Python | Best fit for launch, diagnostics, rosbag analysis, test automation, and FAE field scripts. |
+| Build | colcon + ament | Standard ROS 2 workspace workflow. |
+| UI later | Qt 6 | Suitable for Linux operator panels and maintainable CMake integration. |
+
+## Current Implementation
+
+The repository currently contains a runnable mock AMR stack.
+
+| Package | Language | Purpose |
+| --- | --- | --- |
+| `amr_interfaces` | ROS IDL | Project-specific messages and services |
+| `amr_battery_driver` | C++ | Mock BMS, `BatteryState`, diagnostics, battery fault injection |
+| `amr_io_driver` | C++ | Mock IO board, IO state, output service, input fault injection |
+| `amr_motor_driver` | C++ | Mock motor drive, wheel feedback, motor fault injection |
+| `amr_safety_monitor` | C++ | `/cmd_vel` safety gate and `/safety_state` |
+| `amr_base_controller` | C++ | Differential drive wheel command, odometry, TF |
+| `amr_system_manager` | C++ | Robot mode and fault aggregation |
+| `amr_bringup` | Python/YAML | Launch and parameter files |
+| `amr_description` | SDF/URDF/RViz | AMR model for Gazebo and RViz |
+| `amr_sim` | Gazebo/YAML/Python launch | Gazebo Harmonic world and ROS-Gazebo bridge |
+| `amr_tools` | Python | FAE health report and fault scenario CLI |
+
+## Quick Start
+
+```bash
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install
+source install/setup.bash
+
+ros2 launch amr_bringup mock_robot.launch.py
+```
+
+Send a manual command:
+
+```bash
+ros2 topic pub --rate 10 /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.20}, angular: {z: 0.30}}"
+```
+
+Inspect the robot:
+
+```bash
+ros2 topic echo /robot_state
+ros2 topic echo /safety_state
+ros2 topic hz /odom
+ros2 run amr_tools health_report --duration 3.0
+```
+
+Run FAE scenarios:
+
+```bash
+ros2 run amr_tools fault_scenario estop-on
+ros2 run amr_tools fault_scenario battery-critical
+ros2 run amr_tools fault_scenario motor-fault --fault-code 2310
+ros2 run amr_tools fault_scenario recover
+```
+
+Run Gazebo simulation:
+
+```bash
+ros2 launch amr_sim gazebo_amr.launch.py
+```
+
+Gazebo is not a project web page. It is a desktop 3D simulator GUI. The launch file opens a Gazebo window with the warehouse world and AMR model, and also opens RViz by default.
+
+## Documentation
+
+Korean:
+
+- [ROS 2 AMR learning guide](docs/01_ros2_amr_learning_guide.md)
+- [AMR system architecture](docs/02_amr_system_architecture.md)
+- [Implementation roadmap](docs/03_implementation_roadmap.md)
+- [Reference links](docs/04_reference_links.md)
+- [Code walkthrough](docs/05_code_walkthrough.md)
+- [Build and development guide](docs/06_build_and_development_guide.md)
+- [FAE field guide](docs/07_fae_field_guide.md)
+- [Gazebo simulation guide](docs/08_gazebo_simulation_guide.md)
+
+English:
+
+- [ROS 2 AMR learning guide](docs/en/01_ros2_amr_learning_guide.en.md)
+- [AMR system architecture](docs/en/02_amr_system_architecture.en.md)
+- [Implementation roadmap](docs/en/03_implementation_roadmap.en.md)
+- [Reference links](docs/en/04_reference_links.en.md)
+- [Code walkthrough](docs/en/05_code_walkthrough.en.md)
+- [Build and development guide](docs/en/06_build_and_development_guide.en.md)
+- [FAE field guide](docs/en/07_fae_field_guide.en.md)
+- [Gazebo simulation guide](docs/en/08_gazebo_simulation_guide.en.md)

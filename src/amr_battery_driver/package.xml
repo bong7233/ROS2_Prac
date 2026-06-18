@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>amr_battery_driver</name>
+  <version>0.1.0</version>
+  <description>Mock and future real battery driver nodes for the ROS2_Prac AMR.</description>
+  <maintainer email="bong7233@example.com">bong7233</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>amr_interfaces</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
