@@ -34,6 +34,12 @@ flowchart LR
     SafetyState --> System
     System --> RobotState["/robot_state"]
 
+    UI["amr_operator_ui<br/>C++/Qt 6"] --> Cmd
+    Odom --> UI
+    RobotState --> UI
+    SafetyState --> UI
+    Diagnostics --> UI
+
     Diagnostics["/diagnostics"] --- Battery
     Diagnostics --- IO
     Diagnostics --- Motor
@@ -62,6 +68,7 @@ ROS 2 포트폴리오에서 중요한 것은 "노드를 많이 만들었다"가 
 | `amr_safety_monitor` | `safety_monitor_node.cpp` | multi-topic subscription, safety gate, watchdog |
 | `amr_base_controller` | `diff_drive_base_controller_node.cpp` | kinematics, odometry, TF |
 | `amr_system_manager` | `system_manager_node.cpp` | state aggregation, mode service |
+| `amr_operator_ui` | `main_window.cpp`, `ros_worker.cpp` | Qt Widgets, ROS executor thread, operator console |
 | `amr_bringup` | `mock_robot.launch.py`, `mock_robot.yaml` | launch, parameters |
 | `amr_tools` | `health_report.py` | Python/rclpy field-support tooling |
 
@@ -200,12 +207,29 @@ Good C++ use cases in this project:
 - safety gate
 - hardware driver nodes
 - odometry
-- Qt UI integration with ROS 2, later
+- Qt UI integration with ROS 2
 - high-rate or latency-sensitive logic
 
 This split is useful for an FAE portfolio because it shows both real-time-ish runtime discipline and field automation skill.
 
-## 7. How To Read The Code
+## 7. Qt Operator UI Structure
+
+`amr_operator_ui`는 Gazebo 화면 안에 들어가는 플러그인이 아니라, 실제 로봇과 Gazebo 시뮬레이션 모두에 붙을 수 있는 별도 ROS 2 Qt 노드입니다.
+
+```text
+Qt MainWindow
+  -> RobotSceneWidget: 상단 시점 로봇 위치 표시와 클릭 선택
+  -> side panel: mode, safety, battery, IO, motor, diagnostics 표시
+
+RosWorker
+  -> subscribe: /odom, /battery_state, /io_state, /motor_state, /safety_state, /robot_state, /diagnostics
+  -> publish: /cmd_vel
+  -> service call: /set_mode, /reset_fault
+```
+
+ROS callback은 `rclcpp::executors::MultiThreadedExecutor` 스레드에서 받고, Qt 화면 갱신은 signal/slot으로 메인 스레드에 전달합니다. 이 구조는 현업 Qt+ROS 운영 프로그램에서 thread 충돌을 줄이는 기본 패턴입니다.
+
+## 8. How To Read The Code
 
 Recommended reading order:
 
@@ -220,9 +244,12 @@ Recommended reading order:
 9. `src/amr_safety_monitor/src/safety_monitor_node.cpp`
 10. `src/amr_base_controller/src/diff_drive_base_controller_node.cpp`
 11. `src/amr_system_manager/src/system_manager_node.cpp`
-12. `src/amr_tools/amr_tools/health_report.py`
+12. `src/amr_operator_ui/src/ros_worker.cpp`
+13. `src/amr_operator_ui/src/main_window.cpp`
+14. `src/amr_operator_ui/src/robot_scene_widget.cpp`
+15. `src/amr_tools/amr_tools/health_report.py`
 
-## 8. Expected Demo Commands
+## 9. Expected Demo Commands
 
 Build:
 

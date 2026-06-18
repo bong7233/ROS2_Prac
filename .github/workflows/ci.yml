@@ -21,6 +21,7 @@ jobs:
         run: |
           python3 -m py_compile \
             src/amr_bringup/launch/mock_robot.launch.py \
+            src/amr_operator_ui/launch/operator_ui.launch.py \
             src/amr_sim/launch/gazebo_amr.launch.py \
             src/amr_tools/amr_tools/fault_scenario.py \
             src/amr_tools/amr_tools/health_report.py
@@ -74,6 +75,9 @@ jobs:
           sudo apt-get install -y \
             python3-colcon-common-extensions \
             python3-rosdep \
+            qt6-base-dev \
+            qt6-tools-dev \
+            qt6-tools-dev-tools \
             ros-jazzy-ros-base
 
       - name: Install workspace dependencies

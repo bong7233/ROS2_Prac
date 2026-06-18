@@ -17,7 +17,7 @@ The project starts from a realistic industrial robot layout: a robot PC, serial 
 | Runtime language | C++17 | Appropriate for drivers, control loops, safety gate, odometry, and Qt integration. |
 | Tooling language | Python | Best fit for launch, diagnostics, rosbag analysis, test automation, and FAE field scripts. |
 | Build | colcon + ament | Standard ROS 2 workspace workflow. |
-| UI later | Qt 6 | Suitable for Linux operator panels and maintainable CMake integration. |
+| Operator UI | Qt 6 | Suitable for Linux operator panels and maintainable CMake integration. |
 
 ## Current Implementation
 
@@ -37,6 +37,7 @@ GitHub Actions CI runs static checks and a ROS 2 Jazzy `colcon build/test` on `u
 | `amr_bringup` | Python/YAML | Launch and parameter files |
 | `amr_description` | SDF/URDF/RViz | AMR model for Gazebo and RViz |
 | `amr_sim` | Gazebo/YAML/Python launch | Gazebo Harmonic world and ROS-Gazebo bridge |
+| `amr_operator_ui` | C++/Qt 6 | Clickable operator console, live robot telemetry, manual jog, mode/fault services |
 | `amr_tools` | Python | FAE health report and fault scenario CLI |
 
 ## Quick Start
@@ -48,6 +49,16 @@ source install/setup.bash
 
 ros2 launch amr_bringup mock_robot.launch.py
 ```
+
+Run the Qt operator console in another terminal:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch amr_operator_ui operator_ui.launch.py
+```
+
+Click the robot in the workspace view to open the right-side operator panel.
 
 Send a manual command:
 
@@ -94,6 +105,7 @@ Korean:
 - [Build and development guide](docs/06_build_and_development_guide.md)
 - [FAE field guide](docs/07_fae_field_guide.md)
 - [Gazebo simulation guide](docs/08_gazebo_simulation_guide.md)
+- [Qt operator UI guide](docs/09_qt_operator_ui_guide.md)
 
 English:
 
@@ -105,3 +117,4 @@ English:
 - [Build and development guide](docs/en/06_build_and_development_guide.en.md)
 - [FAE field guide](docs/en/07_fae_field_guide.en.md)
 - [Gazebo simulation guide](docs/en/08_gazebo_simulation_guide.en.md)
+- [Qt operator UI guide](docs/en/09_qt_operator_ui_guide.en.md)

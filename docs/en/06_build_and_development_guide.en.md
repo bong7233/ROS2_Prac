@@ -26,6 +26,7 @@ Install common tools:
 sudo apt update
 sudo apt install -y \
   build-essential cmake git \
+  qt6-base-dev qt6-tools-dev qt6-tools-dev-tools \
   python3-colcon-common-extensions \
   python3-rosdep python3-vcstool \
   ros-jazzy-desktop \
@@ -56,6 +57,14 @@ rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
 source install/setup.bash
 ros2 launch amr_bringup mock_robot.launch.py
+```
+
+In another terminal, run the Qt operator console:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch amr_operator_ui operator_ui.launch.py
 ```
 
 Send a command:
@@ -128,6 +137,7 @@ ros2 interface show amr_interfaces/msg/SafetyState
 ros2 interface show amr_interfaces/srv/InjectMotorFault
 ros2 param list /safety_monitor
 ros2 run tf2_ros tf2_echo odom base_link
+ros2 launch amr_operator_ui operator_ui.launch.py
 ```
 
 ## 7. GitHub Actions CI

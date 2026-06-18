@@ -31,7 +31,8 @@ This document explains the current mock AMR runtime stack.
 7. `amr_safety_monitor`
 8. `amr_base_controller`
 9. `amr_system_manager`
-10. `amr_tools`
+10. `amr_operator_ui`
+11. `amr_tools`
 
 ## 3. Important Interfaces
 
@@ -45,6 +46,8 @@ This document explains the current mock AMR runtime stack.
 | `/safety_state` | custom msg | Safety gate reason |
 | `/robot_state` | custom msg | Mode/fault summary |
 | `/diagnostics` | `DiagnosticArray` | Health data |
+| `/set_mode` | custom srv | Operator mode request |
+| `/reset_fault` | `Trigger` | Software fault reset |
 
 ## 4. FAE Services
 
@@ -64,6 +67,7 @@ C++ handles runtime behavior:
 - safety gate
 - odometry
 - robot state
+- Qt operator console
 
 Python handles FAE support:
 
@@ -72,3 +76,19 @@ Python handles FAE support:
 - fault scenario CLI
 - future rosbag/log analysis
 
+## 6. Qt Operator UI Structure
+
+`amr_operator_ui` is a C++/Qt 6 ROS node. It does not embed into Gazebo. It connects to the same ROS graph that a real robot or Gazebo simulation publishes.
+
+```text
+Qt MainWindow
+  -> RobotSceneWidget: top-down robot scene and click selection
+  -> side panel: mode, safety, power, IO, motor, diagnostics
+
+RosWorker
+  -> subscribes: /odom, /battery_state, /io_state, /motor_state, /safety_state, /robot_state, /diagnostics
+  -> publishes: /cmd_vel
+  -> calls: /set_mode, /reset_fault
+```
+
+This separation keeps UI rendering on the Qt main thread while ROS callbacks run in a `rclcpp::executors::MultiThreadedExecutor` thread.

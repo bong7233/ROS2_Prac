@@ -30,6 +30,7 @@ English version: [Build and Development Guide](en/06_build_and_development_guide
 sudo apt update
 sudo apt install -y \
   build-essential cmake git \
+  qt6-base-dev qt6-tools-dev qt6-tools-dev-tools \
   python3-colcon-common-extensions \
   python3-rosdep python3-vcstool \
   ros-jazzy-desktop \
@@ -122,6 +123,16 @@ ros2 run amr_tools health_report --duration 3.0
 ros2 topic echo /robot_state
 ros2 topic echo /safety_state
 ros2 topic hz /odom
+```
+
+터미널 4에서 Qt 운영 UI를 실행합니다.
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cd ~/ros2_ws/ROS2_Prac
+source install/setup.bash
+
+ros2 launch amr_operator_ui operator_ui.launch.py
 ```
 
 ## 4. FAE 시나리오 실행
@@ -287,6 +298,12 @@ TF 확인:
 
 ```bash
 ros2 run tf2_ros tf2_echo odom base_link
+```
+
+Qt 운영 UI:
+
+```bash
+ros2 launch amr_operator_ui operator_ui.launch.py
 ```
 
 ## 8. 빌드 문제 해결
