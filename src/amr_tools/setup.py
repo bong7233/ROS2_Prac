@@ -11,6 +11,8 @@ setup(
         (f"share/{package_name}", ["package.xml"]),
     ],
     install_requires=["setuptools"],
+    test_suite="test",
+    tests_require=["pytest"],
     zip_safe=True,
     maintainer="bong7233",
     maintainer_email="bong7233@example.com",
