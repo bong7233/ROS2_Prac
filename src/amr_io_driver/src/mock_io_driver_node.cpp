@@ -172,7 +172,7 @@ private:
     msg.sequence = sequence_++;
 
     io_pub_->publish(msg);
-    updater_.update();
+    updater_.force_update();
   }
 
   void produceDiagnostics(diagnostic_updater::DiagnosticStatusWrapper & status)

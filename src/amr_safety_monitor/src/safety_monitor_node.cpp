@@ -162,7 +162,7 @@ private:
     safety_state_pub_->publish(state);
 
     last_decision_ = decision;
-    updater_.update();
+    updater_.force_update();
   }
 
   struct Decision

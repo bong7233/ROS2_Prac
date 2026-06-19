@@ -111,7 +111,7 @@ private:
     msg.temperature = static_cast<float>(temperature_c_);
 
     battery_pub_->publish(msg);
-    updater_.update();
+    updater_.force_update();
   }
 
   void onSetBatteryPercentage(

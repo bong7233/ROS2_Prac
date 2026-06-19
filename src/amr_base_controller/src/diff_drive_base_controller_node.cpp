@@ -115,7 +115,7 @@ private:
     msg.max_accel_radps2 = max_wheel_accel_radps2_;
     wheel_cmd_pub_->publish(msg);
 
-    updater_.update();
+    updater_.force_update();
   }
 
   void onMotorState(const amr_interfaces::msg::MotorState::SharedPtr msg)

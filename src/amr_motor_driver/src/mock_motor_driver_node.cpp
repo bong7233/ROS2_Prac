@@ -193,7 +193,7 @@ private:
     msg.command_age_ms = commandAgeMs(stamp);
     motor_state_pub_->publish(msg);
 
-    updater_.update();
+    updater_.force_update();
   }
 
   double commandAgeMs(const rclcpp::Time & stamp) const

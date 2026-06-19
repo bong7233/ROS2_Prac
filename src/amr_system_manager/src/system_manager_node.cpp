@@ -215,7 +215,7 @@ private:
     robot_state_pub_->publish(msg);
     last_mode_ = msg.mode;
 
-    updater_.update();
+    updater_.force_update();
   }
 
   uint8_t effectiveMode() const
