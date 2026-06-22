@@ -152,6 +152,7 @@ ros2 topic echo /cmd_vel
 
 ## Next Steps
 
+- `amr_description`에 `camera_link`/`camera_optical_frame`을 추가해 두었다. 다음은 Gazebo 카메라 센서를 붙여 sim에서 실제 영상으로 검출까지 돌리는 것.
 - `system_manager`의 `CHARGING` 모드 및 도킹 시퀀스와 연동(도킹 완료 시 모드 전환).
 - 도킹을 `Dock.action`(피드백 phase/range, 결과) 액션 서버로 승격.
 - 마커 보드(여러 마커)로 dock-face yaw까지 안정적으로 복원.
