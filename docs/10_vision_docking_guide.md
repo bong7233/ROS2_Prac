@@ -135,10 +135,22 @@ cd src/amr_docking
 python3 -m pytest test -q
 ```
 
+## Closed-Loop Demo (no Gazebo)
+
+`mock_dock_camera`는 `use_odom: true`일 때 마커를 world(odom) 좌표에 고정해 두고, `/odom`으로 들어오는 로봇 실제 위치 기준으로 다시 렌더링한다. 따라서 컨트롤러가 `/cmd_vel`을 내면 `safety → base → /odom → 카메라 → 검출 → /docking_state → 컨트롤러`로 루프가 실제로 닫힌다. Gazebo 없이 mock 스택만으로 동작한다.
+
+```bash
+ros2 launch amr_docking dock_closed_loop.launch.py
+ros2 topic echo /docking_state
+ros2 topic echo /cmd_vel
+```
+
+로봇은 원점에서 출발하고 마커는 앞쪽 약간 옆(`marker_world_x`, `marker_world_y`)에 있어 `ALIGN → APPROACH → DOCKED` 진행을 볼 수 있다. world→카메라 변환 기하(`world_marker_to_camera_center`)도 ROS 없이 단위 테스트된다.
+
 ## Next Steps
 
-- mock 카메라가 `/cmd_vel_safe`나 `/odom`을 받아 마커 상대 위치를 갱신 → ROS만으로 완전한 폐루프 도킹 데모.
-- `system_manager`의 `CHARGING` 모드 및 도킹 시퀀스와 연동.
+- `system_manager`의 `CHARGING` 모드 및 도킹 시퀀스와 연동(도킹 완료 시 모드 전환).
+- 도킹을 `Dock.action`(피드백 phase/range, 결과) 액션 서버로 승격.
 - 마커 보드(여러 마커)로 dock-face yaw까지 안정적으로 복원.
 - `amr_description`에 카메라 링크/광학 프레임 추가, Gazebo 카메라 센서로 sim 통합.
 - 실제 카메라 드라이버(`v4l2_camera`/`usb_cam`) 연동.

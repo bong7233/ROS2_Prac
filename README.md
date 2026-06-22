@@ -335,6 +335,14 @@ ros2 service call /enable_docking std_srvs/srv/SetBool "{data: true}"
 
 생성된 `/cmd_vel`은 manual jog/Nav2와 동일하게 safety monitor를 거칩니다. mock robot이나 Gazebo를 함께 실행하면 실제 base가 움직입니다.
 
+Gazebo 없이 mock 스택만으로 완전한 폐루프 도킹(컨트롤러→safety→base→odom→카메라→검출→컨트롤러):
+
+```bash
+ros2 launch amr_docking dock_closed_loop.launch.py
+```
+
+로봇이 원점에서 출발해 앞쪽 옆의 마커로 `ALIGN → APPROACH → DOCKED` 순으로 접근합니다.
+
 Linux/Windows 개발, 수정, 빌드, 실행 절차는 [빌드와 개발 가이드](docs/06_build_and_development_guide.md)에 정리했습니다.
 
 ## Documentation
