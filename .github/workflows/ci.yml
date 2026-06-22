@@ -24,7 +24,12 @@ jobs:
             src/amr_operator_ui/launch/operator_ui.launch.py \
             src/amr_sim/launch/gazebo_amr.launch.py \
             src/amr_tools/amr_tools/fault_scenario.py \
-            src/amr_tools/amr_tools/health_report.py
+            src/amr_tools/amr_tools/health_report.py \
+            src/amr_vision/amr_vision/aruco_compat.py \
+            src/amr_vision/amr_vision/marker_docking.py \
+            src/amr_vision/amr_vision/aruco_docking_node.py \
+            src/amr_vision/amr_vision/mock_dock_camera_node.py \
+            src/amr_vision/launch/docking_vision.launch.py
 
       - name: Check XML, SDF, and xacro syntax
         run: |
