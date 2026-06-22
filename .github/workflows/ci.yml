@@ -34,7 +34,10 @@ jobs:
             src/amr_docking/amr_docking/docking_controller_node.py \
             src/amr_docking/launch/docking_controller.launch.py \
             src/amr_docking/launch/dock_demo.launch.py \
-            src/amr_docking/launch/dock_closed_loop.launch.py
+            src/amr_docking/launch/dock_closed_loop.launch.py \
+            src/amr_lidar_driver/amr_lidar_driver/scan_model.py \
+            src/amr_lidar_driver/amr_lidar_driver/mock_lidar_driver_node.py \
+            src/amr_lidar_driver/launch/mock_lidar.launch.py
 
       - name: Check XML, SDF, and xacro syntax
         run: |
