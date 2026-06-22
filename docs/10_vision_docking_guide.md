@@ -1,5 +1,7 @@
 # Vision Docking Guide (amr_vision)
 
+English version: [Vision Docking Guide](en/10_vision_docking_guide.en.md)
+
 이 문서는 `amr_vision` 패키지가 제공하는 OpenCV 기반 ArUco 도킹 마커 인식 기능을 설명합니다. 실제 AMR이 충전 스테이션에 정밀 정렬할 때 흔히 쓰는 fiducial marker 도킹을, 이 프로젝트의 mock 우선 철학에 맞춰 하드웨어 없이 검증 가능하게 구현했습니다.
 
 ## Goal

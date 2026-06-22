@@ -39,6 +39,9 @@ GitHub Actions CI runs static checks and a ROS 2 Jazzy `colcon build/test` on `u
 | `amr_sim` | Gazebo/YAML/Python launch | Gazebo Harmonic world and ROS-Gazebo bridge |
 | `amr_operator_ui` | C++/Qt 6 | Clickable operator console, live robot telemetry, manual jog, mode/fault services |
 | `amr_tools` | Python | FAE health report and fault scenario CLI |
+| `amr_vision` | Python/OpenCV | ArUco docking-marker detection, mock camera, `/docking_state` |
+| `amr_docking` | Python | Alignment/approach controller from `/docking_state`, emits `/cmd_vel` |
+| `amr_lidar_driver` | Python | Mock 2D LiDAR simulator, `/scan` (Nav2 input prep) |
 
 ## Quick Start
 
@@ -85,6 +88,31 @@ ros2 run amr_tools fault_scenario motor-fault --fault-code 2310
 ros2 run amr_tools fault_scenario recover
 ```
 
+Run the vision docking pipeline (ArUco marker detection):
+
+```bash
+ros2 launch amr_vision docking_vision.launch.py
+ros2 topic echo /docking_state
+ros2 run rqt_image_view rqt_image_view /docking_debug_image
+```
+
+Run the fully closed-loop mock docking (no Gazebo): the controller drives
+`/cmd_vel` -> safety -> base -> `/odom`; the mock camera re-renders the marker
+from the new robot pose, so the loop closes and the robot does
+`ALIGN -> APPROACH -> DOCKED`. The mock LiDAR provides `/scan` for the
+controller's obstacle stop.
+
+```bash
+ros2 launch amr_docking dock_closed_loop.launch.py
+```
+
+Publish a mock laser scan on its own (Nav2 input prep without Gazebo):
+
+```bash
+ros2 launch amr_lidar_driver mock_lidar.launch.py
+ros2 topic echo /scan --once
+```
+
 Run Gazebo simulation:
 
 ```bash
@@ -106,6 +134,7 @@ Korean:
 - [FAE field guide](docs/07_fae_field_guide.md)
 - [Gazebo simulation guide](docs/08_gazebo_simulation_guide.md)
 - [Qt operator UI guide](docs/09_qt_operator_ui_guide.md)
+- [Vision docking guide](docs/10_vision_docking_guide.md)
 
 English:
 
@@ -118,3 +147,4 @@ English:
 - [FAE field guide](docs/en/07_fae_field_guide.en.md)
 - [Gazebo simulation guide](docs/en/08_gazebo_simulation_guide.en.md)
 - [Qt operator UI guide](docs/en/09_qt_operator_ui_guide.en.md)
+- [Vision docking guide](docs/en/10_vision_docking_guide.en.md)
