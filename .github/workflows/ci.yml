@@ -56,6 +56,17 @@ jobs:
           print(f"checked {checked} XML-like files")
           PY
 
+      - name: Run ROS-free unit tests
+        run: |
+          python3 -m venv /tmp/rosfree
+          /tmp/rosfree/bin/pip install --quiet --upgrade pip
+          /tmp/rosfree/bin/pip install --quiet pytest opencv-contrib-python-headless numpy
+          ROOT=$PWD
+          (cd src/amr_vision && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_lidar_driver && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_docking && PYTHONPATH="$ROOT/src/amr_vision" /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_tools && /tmp/rosfree/bin/python -m pytest test/test_report_model.py -q)
+
   ros2-build:
     name: ROS 2 Jazzy build
     runs-on: ubuntu-24.04
