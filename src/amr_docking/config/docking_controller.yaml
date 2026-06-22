@@ -1,0 +1,15 @@
+docking_controller:
+  ros__parameters:
+    control_rate_hz: 20.0
+    # Stop if docking_state goes stale (no fresh perception).
+    command_timeout_ms: 500.0
+    # Start disabled; call /enable_docking (std_srvs/SetBool) to activate.
+    auto_start: false
+    max_linear_mps: 0.15
+    max_angular_radps: 0.6
+    range_gain: 0.3
+    bearing_gain: 1.2
+    # Rotate in place until the marker is within this bearing before driving.
+    align_first_bearing_rad: 0.20
+    # >0 rotates slowly to search when no marker is visible; 0 stops.
+    search_yaw_rate_radps: 0.0

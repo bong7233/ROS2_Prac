@@ -110,9 +110,34 @@ python3 -m pytest test -q
 
 `aruco_compat`는 OpenCV 4.6(Ubuntu 24.04 / ROS 2 Jazzy의 `python3-opencv`)과 4.7+(pip wheel)의 ArUco API 차이를 feature detection으로 흡수하므로, CI와 개발 PC에서 동일한 코드가 동작한다.
 
+## Docking Controller (amr_docking)
+
+`amr_docking` 패키지는 `/docking_state`를 받아 마커에 정렬하고 접근하는 `/cmd_vel`을 생성한다. 제어 법칙(`amr_docking/docking_controller.py`)은 perception과 마찬가지로 ROS 의존성 없이 분리되어 단위 테스트된다.
+
+동작 단계:
+
+- `DOCKED`: 검출기가 `aligned`를 보고하면 정지·유지.
+- `SEARCH`: 마커 미검출이면 정지(또는 `search_yaw_rate_radps`>0이면 천천히 회전).
+- `ALIGN`: 마커는 보이나 방위각이 크면 제자리 회전으로 먼저 정렬.
+- `APPROACH`: 마커가 정면이면 전진(거리에 비례해 감속)하며 방위각 보정.
+
+생성된 `/cmd_vel`은 manual jog/Nav2와 동일하게 safety monitor를 거치므로, estop/battery/timeout 게이트가 그대로 적용된다. 기본값은 `auto_start: false`이며 `/enable_docking`(`std_srvs/SetBool`)로 시작·정지한다. `dock_demo.launch.py`는 perception과 컨트롤러를 함께 띄우고 컨트롤러를 자동 시작한다.
+
+```bash
+ros2 launch amr_docking dock_demo.launch.py
+ros2 topic echo /cmd_vel
+```
+
+제어 법칙 테스트:
+
+```bash
+cd src/amr_docking
+python3 -m pytest test -q
+```
+
 ## Next Steps
 
-- 도킹 컨트롤러 노드: `/docking_state`를 받아 `/cmd_vel`을 생성하는 횡정렬 + 접근 제어.
+- mock 카메라가 `/cmd_vel_safe`나 `/odom`을 받아 마커 상대 위치를 갱신 → ROS만으로 완전한 폐루프 도킹 데모.
 - `system_manager`의 `CHARGING` 모드 및 도킹 시퀀스와 연동.
 - 마커 보드(여러 마커)로 dock-face yaw까지 안정적으로 복원.
 - `amr_description`에 카메라 링크/광학 프레임 추가, Gazebo 카메라 센서로 sim 통합.

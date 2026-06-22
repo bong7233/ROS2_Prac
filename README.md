@@ -147,6 +147,7 @@ ROS2_Prac/
     amr_motor_driver/
     amr_tools/
     amr_vision/
+    amr_docking/
 ```
 
 ## Current Implementation
@@ -170,6 +171,7 @@ GitHub Actions CI가 `ubuntu-24.04`에서 정적 검증과 ROS 2 Jazzy `colcon b
 | `amr_operator_ui` | C++/Qt 6 | Implemented | 클릭 가능한 운영 콘솔, 실시간 상태 표시, 수동 조그, 모드/장애 서비스 |
 | `amr_tools` | Python | Implemented | FAE용 health report/fault scenario CLI |
 | `amr_vision` | Python/OpenCV | Implemented | ArUco 도킹 마커 인식, mock 카메라, `/docking_state` |
+| `amr_docking` | Python | Implemented | `/docking_state` 기반 정렬·접근 컨트롤러, `/cmd_vel` 생성 |
 
 이번 포트폴리오에서도 Python은 분명히 사용합니다. 다만 역할을 분리합니다.
 
@@ -203,6 +205,7 @@ FAE 포지션에서는 Python이 매우 중요합니다. 그래서 이 프로젝
 | `/reset_fault` | `std_srvs/srv/Trigger` | UI/system manager | system manager | Software fault reset request |
 | `/docking_state` | custom msg | vision (aruco_docking) | docking controller, UI | ArUco 도킹 마커 거리/횡오차/방위각 |
 | `/image`, `/camera_info` | `sensor_msgs` | mock camera or real driver | vision | Docking camera stream |
+| `/enable_docking` | `std_srvs/srv/SetBool` | UI/operator | docking controller | 도킹 정렬·접근 시퀀스 시작/정지 |
 
 ## Robot Mode Model
 
@@ -320,6 +323,17 @@ ros2 run rqt_image_view rqt_image_view /docking_debug_image
 ```
 
 mock 카메라가 도킹 마커를 가까이 가져오면 `/docking_state`의 `range_m`이 줄어들고, 정렬되면 `aligned`가 true가 됩니다. 자세한 내용은 [비전 도킹 가이드](docs/10_vision_docking_guide.md)를 참고하세요.
+
+도킹 컨트롤러까지 포함한 폐루프 동작(perception → 정렬·접근 제어 → `/cmd_vel`):
+
+```bash
+ros2 launch amr_docking dock_demo.launch.py
+ros2 topic echo /cmd_vel
+# 컨트롤러를 수동으로 켜고 끄기 (dock_demo는 auto_start로 이미 켜져 있음)
+ros2 service call /enable_docking std_srvs/srv/SetBool "{data: true}"
+```
+
+생성된 `/cmd_vel`은 manual jog/Nav2와 동일하게 safety monitor를 거칩니다. mock robot이나 Gazebo를 함께 실행하면 실제 base가 움직입니다.
 
 Linux/Windows 개발, 수정, 빌드, 실행 절차는 [빌드와 개발 가이드](docs/06_build_and_development_guide.md)에 정리했습니다.
 
