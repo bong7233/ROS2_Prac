@@ -120,6 +120,7 @@ python3 -m pytest test -q
 - `SEARCH`: 마커 미검출이면 정지(또는 `search_yaw_rate_radps`>0이면 천천히 회전).
 - `ALIGN`: 마커는 보이나 방위각이 크면 제자리 회전으로 먼저 정렬.
 - `APPROACH`: 마커가 정면이면 전진(거리에 비례해 감속)하며 방위각 보정.
+- `BLOCKED`: `/scan` 접근 코리도어에 장애물이 있으면 정지. 도킹 구조물 자체는 `dock_margin_m`로 무시해 도크를 장애물로 오인하지 않는다(`enable_obstacle_stop`으로 끌 수 있음).
 
 생성된 `/cmd_vel`은 manual jog/Nav2와 동일하게 safety monitor를 거치므로, estop/battery/timeout 게이트가 그대로 적용된다. 기본값은 `auto_start: false`이며 `/enable_docking`(`std_srvs/SetBool`)로 시작·정지한다. `dock_demo.launch.py`는 perception과 컨트롤러를 함께 띄우고 컨트롤러를 자동 시작한다.
 

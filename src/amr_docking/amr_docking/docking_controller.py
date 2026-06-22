@@ -48,6 +48,52 @@ def _clamp(value: float, limit: float) -> float:
     return max(-limit, min(limit, value))
 
 
+def forward_corridor_clearance(
+    ranges,
+    angle_min: float,
+    angle_increment: float,
+    half_width_m: float,
+) -> float:
+    """Nearest forward obstacle distance within a straight corridor ahead.
+
+    Considers only beams pointing forward whose lateral offset falls inside the
+    robot's half width, and returns the smallest forward (x) distance among
+    them, or ``inf`` if the corridor is clear. Beam ranges are taken in the
+    sensor frame (``sensor_msgs/LaserScan``), assumed aligned with the robot's
+    forward axis.
+    """
+    clearance = math.inf
+    for index, range_m in enumerate(ranges):
+        if not math.isfinite(range_m):
+            continue
+        angle = angle_min + index * angle_increment
+        forward = range_m * math.cos(angle)
+        lateral = range_m * math.sin(angle)
+        if forward > 0.0 and abs(lateral) <= half_width_m:
+            clearance = min(clearance, forward)
+    return clearance
+
+
+def is_path_blocked(
+    clearance_m: float,
+    stop_distance_m: float,
+    marker_range_m: float,
+    detected: bool,
+    dock_margin_m: float = 0.15,
+) -> bool:
+    """Decide whether to stop for an obstacle in the docking path.
+
+    When the marker is detected, the dock structure itself shows up in the scan
+    at roughly ``marker_range_m``; only obstacles closer than the dock (minus a
+    margin) count as blocking, so the controller is not fooled into stopping by
+    the dock it is approaching.
+    """
+    threshold = stop_distance_m
+    if detected:
+        threshold = min(threshold, marker_range_m - dock_margin_m)
+    return clearance_m < threshold
+
+
 def compute_docking_command(
     detected: bool,
     range_m: float,
@@ -55,15 +101,20 @@ def compute_docking_command(
     bearing_rad: float,
     aligned: bool,
     config: DockingControllerConfig = DockingControllerConfig(),
+    path_blocked: bool = False,
 ) -> DockingCommand:
     """Compute the next docking velocity command.
 
     ``lateral_offset_m`` is accepted for symmetry with the docking error and to
     keep the interface stable, but the in-plane correction is driven by
     ``bearing_rad`` (the angle to the marker), which already captures the offset.
+    ``path_blocked`` stops the robot for an obstacle in the approach corridor.
     """
     if aligned:
         return DockingCommand(0.0, 0.0, "DOCKED")
+
+    if path_blocked:
+        return DockingCommand(0.0, 0.0, "BLOCKED")
 
     if not detected:
         return DockingCommand(0.0, config.search_yaw_rate_radps, "SEARCH")

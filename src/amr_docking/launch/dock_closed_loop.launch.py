@@ -73,6 +73,22 @@ def generate_launch_description():
         ],
     )
 
+    # Mock LiDAR so the controller's obstacle stop is exercised. The default
+    # obstacle sits off to the side, clear of the docking corridor.
+    mock_lidar = Node(
+        package="amr_lidar_driver",
+        executable="mock_lidar_driver_node",
+        name="mock_lidar_driver",
+        output="screen",
+        parameters=[
+            {
+                "use_odom": True,
+                "obstacles": [2.0, 1.2, 0.4],
+                "use_sim_time": use_sim_time,
+            }
+        ],
+    )
+
     controller = Node(
         package="amr_docking",
         executable="docking_controller_node",
@@ -91,6 +107,7 @@ def generate_launch_description():
             DeclareLaunchArgument("marker_world_y", default_value="0.35"),
             mock_robot,
             mock_camera,
+            mock_lidar,
             detector,
             controller,
         ]
