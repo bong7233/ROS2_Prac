@@ -65,3 +65,16 @@ system_manager:
     critical_battery_percentage: 0.10
     initial_mode: 2
 
+mock_lidar_driver:
+  ros__parameters:
+    frame_id: lidar_link
+    publish_rate_hz: 10.0
+    samples: 360
+    range_min: 0.08
+    range_max: 8.0
+    room_half_x: 5.0
+    room_half_y: 5.0
+    obstacles: [2.5, 1.5, 0.4, -2.0, -1.0, 0.5]
+    noise_stddev: 0.01
+    use_odom: true
+

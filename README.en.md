@@ -113,6 +113,18 @@ ros2 launch amr_lidar_driver mock_lidar.launch.py
 ros2 topic echo /scan --once
 ```
 
+Headless bringup with the core Nav2 inputs (TF, odom, scan), no Gazebo:
+
+```bash
+ros2 launch amr_bringup display.launch.py            # add rviz:=true for RViz
+ros2 run tf2_tools view_frames                        # odom -> base_link -> lidar_link/camera_link
+```
+
+`display.launch.py` adds the sensor static transforms (`base_link -> lidar_link`,
+`base_link -> camera_link`) and the mock LiDAR to `mock_robot.launch.py`. The base
+controller already publishes `odom -> base_link`, completing the `odom -> base_link
+-> laser` chain Nav2 expects.
+
 Run Gazebo simulation:
 
 ```bash

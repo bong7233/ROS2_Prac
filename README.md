@@ -354,6 +354,17 @@ ros2 topic echo /scan --once
 ros2 launch amr_lidar_driver mock_lidar.launch.py use_odom:=true
 ```
 
+Gazebo 없이 Nav2 입력 3종(TF, odom, scan)을 갖춘 헤드리스 bringup:
+
+```bash
+ros2 launch amr_bringup display.launch.py            # +RViz: rviz:=true
+ros2 run tf2_tools view_frames                       # odom -> base_link -> lidar_link/camera_link
+ros2 topic hz /odom
+ros2 topic hz /scan
+```
+
+`display.launch.py`는 `mock_robot.launch.py`에 센서 정적 변환(`base_link -> lidar_link`, `base_link -> camera_link`)과 mock LiDAR를 더한 것입니다. base controller가 `odom -> base_link`를 발행하므로 Nav2가 요구하는 TF 체인(`odom -> base_link -> laser`)이 완성됩니다.
+
 Linux/Windows 개발, 수정, 빌드, 실행 절차는 [빌드와 개발 가이드](docs/06_build_and_development_guide.md)에 정리했습니다.
 
 ## Documentation
