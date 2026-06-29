@@ -43,7 +43,10 @@ jobs:
             src/amr_navigation/amr_navigation/waypoint_follower.py \
             src/amr_navigation/amr_navigation/waypoint_follower_node.py \
             src/amr_navigation/launch/waypoint_follower.launch.py \
-            src/amr_navigation/launch/waypoint_demo.launch.py
+            src/amr_navigation/launch/waypoint_demo.launch.py \
+            src/amr_twist_mux/amr_twist_mux/twist_mux.py \
+            src/amr_twist_mux/amr_twist_mux/twist_mux_node.py \
+            src/amr_twist_mux/launch/twist_mux.launch.py
 
       - name: Check XML, SDF, and xacro syntax
         run: |
@@ -70,6 +73,7 @@ jobs:
           (cd src/amr_vision && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_lidar_driver && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_navigation && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_twist_mux && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_docking && PYTHONPATH="$ROOT/src/amr_vision" /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_tools && /tmp/rosfree/bin/python -m pytest test/test_report_model.py -q)
 
