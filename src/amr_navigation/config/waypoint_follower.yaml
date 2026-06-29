@@ -1,0 +1,17 @@
+waypoint_follower:
+  ros__parameters:
+    control_rate_hz: 20.0
+    command_timeout_ms: 500.0
+    # Start disabled; call /enable_navigation (std_srvs/SetBool) to run.
+    auto_start: false
+    # Restart the route from the first waypoint when the last is reached.
+    loop: false
+    max_linear_mps: 0.4
+    max_angular_radps: 1.0
+    heading_gain: 1.5
+    distance_gain: 0.8
+    waypoint_tolerance_m: 0.15
+    # Turn in place until heading error is below this before driving forward.
+    turn_in_place_rad: 0.5
+    # Flat [x0, y0, x1, y1, ...] odom-frame waypoints (a 2 m square by default).
+    waypoints: [2.0, 0.0, 2.0, 2.0, 0.0, 2.0, 0.0, 0.0]

@@ -39,7 +39,11 @@ jobs:
             src/amr_docking/launch/dock_closed_loop.launch.py \
             src/amr_lidar_driver/amr_lidar_driver/scan_model.py \
             src/amr_lidar_driver/amr_lidar_driver/mock_lidar_driver_node.py \
-            src/amr_lidar_driver/launch/mock_lidar.launch.py
+            src/amr_lidar_driver/launch/mock_lidar.launch.py \
+            src/amr_navigation/amr_navigation/waypoint_follower.py \
+            src/amr_navigation/amr_navigation/waypoint_follower_node.py \
+            src/amr_navigation/launch/waypoint_follower.launch.py \
+            src/amr_navigation/launch/waypoint_demo.launch.py
 
       - name: Check XML, SDF, and xacro syntax
         run: |
@@ -65,6 +69,7 @@ jobs:
           ROOT=$PWD
           (cd src/amr_vision && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_lidar_driver && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_navigation && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_docking && PYTHONPATH="$ROOT/src/amr_vision" /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_tools && /tmp/rosfree/bin/python -m pytest test/test_report_model.py -q)
 

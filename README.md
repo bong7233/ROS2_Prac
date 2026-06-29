@@ -149,6 +149,7 @@ ROS2_Prac/
     amr_vision/
     amr_docking/
     amr_lidar_driver/
+    amr_navigation/
 ```
 
 ## Current Implementation
@@ -174,6 +175,7 @@ GitHub Actions CI가 `ubuntu-24.04`에서 정적 검증과 ROS 2 Jazzy `colcon b
 | `amr_vision` | Python/OpenCV | Implemented | ArUco 도킹 마커 인식, mock 카메라, `/docking_state` |
 | `amr_docking` | Python | Implemented | `/docking_state` 기반 정렬·접근 컨트롤러, `/cmd_vel` 생성 |
 | `amr_lidar_driver` | Python | Implemented | mock 2D LiDAR 시뮬레이터, `/scan` (Nav2 입력 준비) |
+| `amr_navigation` | Python | Implemented | odom 기반 웨이포인트 추종(pure-pursuit), `/cmd_vel` 생성 |
 
 이번 포트폴리오에서도 Python은 분명히 사용합니다. 다만 역할을 분리합니다.
 
@@ -364,6 +366,15 @@ ros2 topic hz /scan
 ```
 
 `display.launch.py`는 `mock_robot.launch.py`에 센서 정적 변환(`base_link -> lidar_link`, `base_link -> camera_link`)과 mock LiDAR를 더한 것입니다. base controller가 `odom -> base_link`를 발행하므로 Nav2가 요구하는 TF 체인(`odom -> base_link -> laser`)이 완성됩니다.
+
+웨이포인트 추종(Nav2 없이 odom 기반 자율주행). 로봇이 기본 사각 경로를 돕니다:
+
+```bash
+ros2 launch amr_navigation waypoint_demo.launch.py        # 반복: loop:=true
+ros2 topic echo /cmd_vel
+```
+
+생성된 `/cmd_vel`은 safety monitor를 거치며, `/odom` 피드백으로 폐루프가 닫힙니다. `/enable_navigation`(`std_srvs/SetBool`)로 시작·정지할 수 있습니다.
 
 Linux/Windows 개발, 수정, 빌드, 실행 절차는 [빌드와 개발 가이드](docs/06_build_and_development_guide.md)에 정리했습니다.
 

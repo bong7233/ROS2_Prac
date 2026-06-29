@@ -42,6 +42,7 @@ GitHub Actions CI runs static checks and a ROS 2 Jazzy `colcon build/test` on `u
 | `amr_vision` | Python/OpenCV | ArUco docking-marker detection, mock camera, `/docking_state` |
 | `amr_docking` | Python | Alignment/approach controller from `/docking_state`, emits `/cmd_vel` |
 | `amr_lidar_driver` | Python | Mock 2D LiDAR simulator, `/scan` (Nav2 input prep) |
+| `amr_navigation` | Python | Odom-based waypoint following (pure pursuit), emits `/cmd_vel` |
 
 ## Quick Start
 
@@ -124,6 +125,16 @@ ros2 run tf2_tools view_frames                        # odom -> base_link -> lid
 `base_link -> camera_link`) and the mock LiDAR to `mock_robot.launch.py`. The base
 controller already publishes `odom -> base_link`, completing the `odom -> base_link
 -> laser` chain Nav2 expects.
+
+Waypoint following (odom-based autonomy without Nav2); the robot drives a square:
+
+```bash
+ros2 launch amr_navigation waypoint_demo.launch.py        # loop:=true to repeat
+ros2 topic echo /cmd_vel
+```
+
+The command flows through the safety monitor, and `/odom` feedback closes the
+loop. Start/stop with `/enable_navigation` (`std_srvs/SetBool`).
 
 Run Gazebo simulation:
 
