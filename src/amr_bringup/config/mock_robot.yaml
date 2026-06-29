@@ -64,6 +64,9 @@ system_manager:
     low_battery_percentage: 0.20
     critical_battery_percentage: 0.10
     initial_mode: 2
+    docking_state_timeout_ms: 1000.0
+    # Enter CHARGING automatically when docked, return to MANUAL when undocked.
+    auto_charge_when_docked: true
 
 mock_lidar_driver:
   ros__parameters:

@@ -72,6 +72,7 @@ public:
     requested_mode_ = static_cast<uint8_t>(
       declare_parameter<int>("initial_mode", RobotState::MODE_MANUAL));
     docking_state_timeout_ms_ = declare_parameter<double>("docking_state_timeout_ms", 1000.0);
+    auto_charge_when_docked_ = declare_parameter<bool>("auto_charge_when_docked", true);
 
     if (publish_rate_hz_ <= 0.0) {
       throw std::runtime_error("publish_rate_hz must be positive");
@@ -185,6 +186,7 @@ private:
     }
 
     requested_mode_ = request->mode;
+    auto_charging_ = false;  // operator override; don't auto-revert on undock
     response->success = true;
     response->message = "requested mode set to " + modeName(requested_mode_);
     RCLCPP_INFO(get_logger(), "%s", response->message.c_str());
@@ -216,6 +218,7 @@ private:
   {
     const rclcpp::Time stamp = now();
     docked_ = computeDocked(stamp);
+    updateAutoCharging();
 
     auto msg = amr_interfaces::msg::RobotState();
     msg.header.stamp = stamp;
@@ -244,6 +247,24 @@ private:
       return false;
     }
     return docking_aligned_;
+  }
+
+  // Edge-triggered: enter CHARGING when the robot docks and return to MANUAL when
+  // it undocks, without fighting an operator who changes mode in between.
+  void updateAutoCharging()
+  {
+    if (auto_charge_when_docked_ && !estop_active_ && !battery_critical_ && !motor_fault_) {
+      if (docked_ && !prev_docked_) {
+        requested_mode_ = RobotState::MODE_CHARGING;
+        auto_charging_ = true;
+        RCLCPP_INFO(get_logger(), "Docked: switching to CHARGING");
+      } else if (!docked_ && prev_docked_ && auto_charging_) {
+        requested_mode_ = RobotState::MODE_MANUAL;
+        auto_charging_ = false;
+        RCLCPP_INFO(get_logger(), "Undocked: returning to MANUAL");
+      }
+    }
+    prev_docked_ = docked_;
   }
 
   uint8_t effectiveMode() const
@@ -335,6 +356,9 @@ private:
   bool have_docking_{false};
   bool docking_aligned_{false};
   bool docked_{false};
+  bool prev_docked_{false};
+  bool auto_charge_when_docked_{true};
+  bool auto_charging_{false};
   rclcpp::Time last_docking_time_;
   std::string safety_reason_{"waiting for state"};
 
