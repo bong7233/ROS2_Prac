@@ -397,6 +397,17 @@ ros2 launch amr_twist_mux twist_mux.launch.py
 ros2 run amr_navigation waypoint_follower_node --ros-args -r cmd_vel:=cmd_vel_nav
 ```
 
+전체 스택을 한 번에(드라이버 + 안전 + 베이스 + 비전 + 도킹 + 주행 + 먹스 중재):
+
+```bash
+ros2 launch amr_bringup full_system.launch.py
+# 기본: 웨이포인트 추종이 사각 경로를 순찰(cmd_vel_nav). 아래로 우선순위 오버라이드:
+ros2 service call /enable_docking std_srvs/srv/SetBool "{data: true}"     # 도킹이 주행보다 우선
+ros2 topic pub /cmd_vel_teleop geometry_msgs/msg/Twist "{linear: {x: 0.1}}"  # 수동이 최우선
+```
+
+명령 흐름은 `nav/dock/teleop → twist_mux → /cmd_vel → safety_monitor → base_controller → /odom`이고, `/odom`이 비전·주행으로 되돌아가 폐루프가 닫힙니다.
+
 Linux/Windows 개발, 수정, 빌드, 실행 절차는 [빌드와 개발 가이드](docs/06_build_and_development_guide.md)에 정리했습니다.
 
 ## Documentation
