@@ -81,18 +81,24 @@ flowchart LR
     subgraph Linux_PC["Linux Robot PC"]
         UI["amr_operator_ui<br/>Qt 6 UI"]
         Bringup["amr_bringup<br/>launch/config"]
-        Manager["amr_system_manager<br/>lifecycle orchestration"]
+        Manager["amr_system_manager<br/>mode/fault, docking-aware"]
         Safety["amr_safety_monitor<br/>mode/fault/estop gate"]
         Base["amr_base_controller<br/>cmd_vel to wheel control"]
-        Diagnostics["amr_diagnostics<br/>diagnostic aggregation"]
         Description["amr_description<br/>URDF/xacro/tf"]
+    end
+
+    subgraph Autonomy["Autonomy and Arbitration"]
+        Vision["amr_vision<br/>ArUco docking detect"]
+        Docking["amr_docking<br/>dock controller"]
+        Nav["amr_navigation<br/>waypoint follower"]
+        Mux["amr_twist_mux<br/>cmd_vel priority"]
     end
 
     subgraph Drivers["Device Driver Nodes"]
         Battery["amr_battery_driver<br/>Serial BMS"]
         IO["amr_io_driver<br/>TCP/IP IO board"]
         Motor["amr_motor_driver<br/>SocketCAN/CANopen"]
-        Lidar["amr_lidar_driver<br/>vendor ROS driver wrapper"]
+        Lidar["amr_lidar_driver<br/>mock 2D LiDAR / vendor"]
     end
 
     subgraph Hardware["Robot Hardware"]
@@ -103,21 +109,27 @@ flowchart LR
     end
 
     UI <--> Manager
-    UI <--> Safety
+    UI -->|cmd_vel_teleop| Mux
+    Docking -->|cmd_vel_dock| Mux
+    Nav -->|cmd_vel_nav| Mux
+    Mux -->|cmd_vel| Safety
     Manager --> Safety
-    Safety --> Base
+    Safety -->|cmd_vel_safe| Base
     Base <--> Motor
+    Base -->|odom| Nav
+    Base -->|odom| Vision
+    Vision -->|docking_state| Docking
+    Vision -->|docking_state| Manager
+    Lidar -->|scan| Docking
     Battery <--> BMS
     IO <--> IOBoard
     Motor <--> Drive
     Lidar <--> Scanner
-    Battery --> Diagnostics
-    IO --> Diagnostics
-    Motor --> Diagnostics
-    Lidar --> Diagnostics
     Description --> Base
     Bringup --> Manager
 ```
+
+모든 런타임 노드는 `diagnostic_updater`로 `/diagnostics`를 발행하며, `amr_tools health_report`와 UI가 이를 집계해 보여줍니다.
 
 핵심 원칙은 UI, 장치 통신, 제어, 상태 관리, 진단을 한 프로세스에 몰아넣지 않는 것입니다. ROS 2에서는 각 책임을 노드와 패키지로 나누고, 노드 사이 계약을 topic/service/action/parameter로 명확히 둡니다.
 
