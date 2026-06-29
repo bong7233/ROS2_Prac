@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "amr_interfaces/msg/docking_state.hpp"
 #include "amr_interfaces/msg/io_state.hpp"
 #include "amr_interfaces/msg/motor_state.hpp"
 #include "amr_interfaces/msg/robot_state.hpp"
@@ -70,6 +71,7 @@ public:
     critical_battery_percentage_ = declare_parameter<double>("critical_battery_percentage", 0.10);
     requested_mode_ = static_cast<uint8_t>(
       declare_parameter<int>("initial_mode", RobotState::MODE_MANUAL));
+    docking_state_timeout_ms_ = declare_parameter<double>("docking_state_timeout_ms", 1000.0);
 
     if (publish_rate_hz_ <= 0.0) {
       throw std::runtime_error("publish_rate_hz must be positive");
@@ -91,6 +93,10 @@ public:
       "safety_state",
       rclcpp::QoS(10),
       std::bind(&SystemManagerNode::onSafetyState, this, std::placeholders::_1));
+    docking_sub_ = create_subscription<amr_interfaces::msg::DockingState>(
+      "docking_state",
+      rclcpp::QoS(10),
+      std::bind(&SystemManagerNode::onDockingState, this, std::placeholders::_1));
 
     robot_state_pub_ =
       create_publisher<amr_interfaces::msg::RobotState>("robot_state", rclcpp::QoS(10));
@@ -151,6 +157,13 @@ private:
     safety_reason_ = msg->active_reason;
   }
 
+  void onDockingState(const amr_interfaces::msg::DockingState::SharedPtr msg)
+  {
+    have_docking_ = true;
+    last_docking_time_ = now();
+    docking_aligned_ = msg->detected && msg->aligned;
+  }
+
   void onSetMode(
     const std::shared_ptr<amr_interfaces::srv::SetMode::Request> request,
     std::shared_ptr<amr_interfaces::srv::SetMode::Response> response)
@@ -201,8 +214,11 @@ private:
 
   void onTimer()
   {
+    const rclcpp::Time stamp = now();
+    docked_ = computeDocked(stamp);
+
     auto msg = amr_interfaces::msg::RobotState();
-    msg.header.stamp = now();
+    msg.header.stamp = stamp;
     msg.header.frame_id = "base_link";
     msg.mode = effectiveMode();
     msg.estop_active = estop_active_;
@@ -211,11 +227,23 @@ private:
     msg.motor_fault = motor_fault_;
     msg.communication_fault = communicationFault();
     msg.fault_active = msg.mode == RobotState::MODE_FAULT || msg.mode == RobotState::MODE_ESTOP;
+    msg.docked = docked_;
     msg.message = buildStateMessage(msg.mode);
     robot_state_pub_->publish(msg);
     last_mode_ = msg.mode;
 
     updater_.force_update();
+  }
+
+  bool computeDocked(const rclcpp::Time & stamp) const
+  {
+    if (!have_docking_) {
+      return false;
+    }
+    if ((stamp - last_docking_time_).seconds() * 1000.0 > docking_state_timeout_ms_) {
+      return false;
+    }
+    return docking_aligned_;
   }
 
   uint8_t effectiveMode() const
@@ -254,10 +282,13 @@ private:
       }
       return "fault active";
     }
-    if (battery_low_) {
-      return modeName(mode) + " with low battery";
+    std::string text = battery_low_
+      ? modeName(mode) + " with low battery"
+      : modeName(mode);
+    if (docked_) {
+      text += " (docked)";
     }
-    return modeName(mode);
+    return text;
   }
 
   void produceDiagnostics(diagnostic_updater::DiagnosticStatusWrapper & status)
@@ -278,12 +309,14 @@ private:
     status.add("estop_active", estop_active_);
     status.add("motor_fault", motor_fault_);
     status.add("communication_fault", communicationFault());
+    status.add("docked", docked_);
     status.add("safety_reason", safety_reason_);
   }
 
   double publish_rate_hz_{5.0};
   double low_battery_percentage_{0.20};
   double critical_battery_percentage_{0.10};
+  double docking_state_timeout_ms_{1000.0};
   uint8_t requested_mode_{RobotState::MODE_MANUAL};
   uint8_t last_mode_{RobotState::MODE_BOOT};
 
@@ -299,12 +332,17 @@ private:
   bool safety_communication_fault_{false};
   bool estop_active_{false};
   bool motor_fault_{false};
+  bool have_docking_{false};
+  bool docking_aligned_{false};
+  bool docked_{false};
+  rclcpp::Time last_docking_time_;
   std::string safety_reason_{"waiting for state"};
 
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_sub_;
   rclcpp::Subscription<amr_interfaces::msg::IoState>::SharedPtr io_sub_;
   rclcpp::Subscription<amr_interfaces::msg::MotorState>::SharedPtr motor_sub_;
   rclcpp::Subscription<amr_interfaces::msg::SafetyState>::SharedPtr safety_sub_;
+  rclcpp::Subscription<amr_interfaces::msg::DockingState>::SharedPtr docking_sub_;
   rclcpp::Publisher<amr_interfaces::msg::RobotState>::SharedPtr robot_state_pub_;
   rclcpp::Service<amr_interfaces::srv::SetMode>::SharedPtr set_mode_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reset_fault_srv_;

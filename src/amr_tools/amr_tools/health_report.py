@@ -103,6 +103,7 @@ class HealthReport(Node):
         print("\nRobot state")
         print(f"- mode: {mode_name}")
         print(f"- fault_active: {msg.fault_active}")
+        print(f"- docked: {msg.docked}")
         print(f"- message: {msg.message}")
 
     def _print_battery(self) -> None:
