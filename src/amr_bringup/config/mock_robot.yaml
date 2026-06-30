@@ -9,6 +9,9 @@ mock_battery_driver:
     low_voltage_v: 22.0
     critical_voltage_v: 21.0
     discharge_rate_vps: 0.0005
+    # Recharge while docked (system in CHARGING mode); raise discharge_rate_vps
+    # for a faster hands-free patrol/charge cycle in the mission demo.
+    recharge_rate_vps: 0.05
     current_a: -3.5
     temperature_c: 32.0
 
