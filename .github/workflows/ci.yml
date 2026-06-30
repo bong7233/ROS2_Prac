@@ -23,6 +23,10 @@ jobs:
             src/amr_bringup/launch/mock_robot.launch.py \
             src/amr_bringup/launch/display.launch.py \
             src/amr_bringup/launch/full_system.launch.py \
+            src/amr_bringup/launch/mission_demo.launch.py \
+            src/amr_mission/amr_mission/mission_coordinator.py \
+            src/amr_mission/amr_mission/mission_coordinator_node.py \
+            src/amr_mission/launch/mission_coordinator.launch.py \
             src/amr_operator_ui/launch/operator_ui.launch.py \
             src/amr_sim/launch/gazebo_amr.launch.py \
             src/amr_tools/amr_tools/fault_scenario.py \
@@ -75,6 +79,7 @@ jobs:
           (cd src/amr_lidar_driver && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_navigation && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_twist_mux && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_mission && /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_docking && PYTHONPATH="$ROOT/src/amr_vision" /tmp/rosfree/bin/python -m pytest test -q)
           (cd src/amr_tools && /tmp/rosfree/bin/python -m pytest test/test_report_model.py -q)
 

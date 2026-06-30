@@ -13,6 +13,7 @@
   <exec_depend>amr_docking</exec_depend>
   <exec_depend>amr_io_driver</exec_depend>
   <exec_depend>amr_lidar_driver</exec_depend>
+  <exec_depend>amr_mission</exec_depend>
   <exec_depend>amr_motor_driver</exec_depend>
   <exec_depend>amr_navigation</exec_depend>
   <exec_depend>amr_safety_monitor</exec_depend>
