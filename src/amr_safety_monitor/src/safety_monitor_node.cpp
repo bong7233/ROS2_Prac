@@ -17,27 +17,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/battery_state.hpp"
 
+#include "amr_safety_monitor/safety_decision.hpp"
+
 namespace amr_safety_monitor
 {
 namespace
 {
 using DiagnosticStatus = diagnostic_msgs::msg::DiagnosticStatus;
-
-std::string joinReasons(const std::vector<std::string> & reasons)
-{
-  if (reasons.empty()) {
-    return "clear";
-  }
-
-  std::ostringstream oss;
-  for (std::size_t i = 0; i < reasons.size(); ++i) {
-    if (i > 0U) {
-      oss << ", ";
-    }
-    oss << reasons.at(i);
-  }
-  return oss.str();
-}
 }  // namespace
 
 class SafetyMonitorNode final : public rclcpp::Node
@@ -176,35 +162,22 @@ private:
   Decision evaluateDecision(const rclcpp::Time & stamp) const
   {
     auto decision = Decision();
-    std::vector<std::string> reasons;
-
     decision.command_timeout = commandAgeMs(stamp) > command_timeout_ms_;
-    if (decision.command_timeout) {
-      reasons.push_back("cmd_vel timeout");
-    }
-    if (estop_active_) {
-      reasons.push_back("estop active");
-    }
-    if (protective_stop_active_) {
-      reasons.push_back("protective stop active");
-    }
-    if (battery_critical_) {
-      reasons.push_back("battery critical");
-    }
-    if (motor_fault_) {
-      reasons.push_back("motor fault " + std::to_string(motor_fault_code_));
-    }
-    if (require_motor_enabled_ && !motor_enabled_) {
-      reasons.push_back("motor disabled");
-    }
-
     decision.communication_fault = communicationFault(stamp);
-    if (decision.communication_fault) {
-      reasons.push_back("state communication timeout");
-    }
 
-    decision.command_allowed = reasons.empty();
-    decision.reason = joinReasons(reasons);
+    const SafetyInputs inputs{
+      decision.command_timeout,
+      estop_active_,
+      protective_stop_active_,
+      battery_critical_,
+      motor_fault_,
+      motor_fault_code_,
+      require_motor_enabled_,
+      motor_enabled_,
+      decision.communication_fault};
+    const SafetyDecision result = evaluateSafetyDecision(inputs);
+    decision.command_allowed = result.command_allowed;
+    decision.reason = result.reason;
     return decision;
   }
 
