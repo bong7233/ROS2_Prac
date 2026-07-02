@@ -16,6 +16,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 
+#include "amr_base_controller/diff_drive_kinematics.hpp"
+
 namespace amr_base_controller
 {
 namespace
@@ -104,14 +106,14 @@ private:
       ? 0.0
       : clampSymmetric(latest_cmd_.angular.z, max_angular_velocity_radps_);
 
-    const double left_linear_mps = linear_x - angular_z * wheel_separation_m_ * 0.5;
-    const double right_linear_mps = linear_x + angular_z * wheel_separation_m_ * 0.5;
+    const WheelVelocities wheels = wheelVelocitiesFromTwist(
+      linear_x, angular_z, wheel_radius_m_, wheel_separation_m_);
 
     auto msg = amr_interfaces::msg::WheelCommand();
     msg.header.stamp = stamp;
     msg.header.frame_id = base_frame_id_;
-    msg.left_velocity_radps = left_linear_mps / wheel_radius_m_;
-    msg.right_velocity_radps = right_linear_mps / wheel_radius_m_;
+    msg.left_velocity_radps = wheels.left_radps;
+    msg.right_velocity_radps = wheels.right_radps;
     msg.max_accel_radps2 = max_wheel_accel_radps2_;
     wheel_cmd_pub_->publish(msg);
 
@@ -124,10 +126,11 @@ private:
     last_motor_state_time_ = now();
     have_motor_state_ = true;
 
-    const double left_linear_mps = msg->left_wheel_velocity_radps * wheel_radius_m_;
-    const double right_linear_mps = msg->right_wheel_velocity_radps * wheel_radius_m_;
-    const double linear_x = (left_linear_mps + right_linear_mps) * 0.5;
-    const double angular_z = (right_linear_mps - left_linear_mps) / wheel_separation_m_;
+    const BodyTwist twist = bodyTwistFromWheelVelocities(
+      msg->left_wheel_velocity_radps, msg->right_wheel_velocity_radps,
+      wheel_radius_m_, wheel_separation_m_);
+    const double linear_x = twist.linear_x;
+    const double angular_z = twist.angular_z;
 
     if (!have_odom_stamp_) {
       last_odom_stamp_ = stamp;
@@ -143,11 +146,11 @@ private:
       return;
     }
 
-    const double delta_theta = angular_z * dt;
-    const double heading_midpoint = heading_rad_ + delta_theta * 0.5;
-    x_m_ += linear_x * std::cos(heading_midpoint) * dt;
-    y_m_ += linear_x * std::sin(heading_midpoint) * dt;
-    heading_rad_ = normalizeAngle(heading_rad_ + delta_theta);
+    const Pose2D updated = integrateOdometry(
+      Pose2D{x_m_, y_m_, heading_rad_}, linear_x, angular_z, dt);
+    x_m_ = updated.x;
+    y_m_ = updated.y;
+    heading_rad_ = updated.heading;
 
     publishOdometry(stamp, linear_x, angular_z);
   }
@@ -191,11 +194,6 @@ private:
   double commandAgeMs(const rclcpp::Time & stamp) const
   {
     return (stamp - last_cmd_time_).seconds() * 1000.0;
-  }
-
-  static double normalizeAngle(const double angle)
-  {
-    return std::atan2(std::sin(angle), std::cos(angle));
   }
 
   void produceDiagnostics(diagnostic_updater::DiagnosticStatusWrapper & status)

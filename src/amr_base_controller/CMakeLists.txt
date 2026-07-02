@@ -16,6 +16,10 @@ find_package(tf2_ros REQUIRED)
 
 add_executable(diff_drive_base_controller_node src/diff_drive_base_controller_node.cpp)
 target_compile_features(diff_drive_base_controller_node PUBLIC cxx_std_17)
+target_include_directories(diff_drive_base_controller_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 ament_target_dependencies(diff_drive_base_controller_node
   amr_interfaces
   diagnostic_msgs
@@ -29,5 +33,14 @@ ament_target_dependencies(diff_drive_base_controller_node
 install(TARGETS diff_drive_base_controller_node
   DESTINATION lib/${PROJECT_NAME}
 )
+install(DIRECTORY include/
+  DESTINATION include
+)
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_diff_drive_kinematics test/test_diff_drive_kinematics.cpp)
+  target_include_directories(test_diff_drive_kinematics PRIVATE include)
+endif()
 
 ament_package()
