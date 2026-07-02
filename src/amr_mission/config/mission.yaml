@@ -1,0 +1,8 @@
+mission_coordinator:
+  ros__parameters:
+    update_rate_hz: 2.0
+    # Start disabled; the mission demo launch enables it.
+    auto_start: false
+    # Battery fractions (0..1): return to dock at/below low, resume at/above full.
+    low_battery_pct: 0.30
+    full_battery_pct: 0.90

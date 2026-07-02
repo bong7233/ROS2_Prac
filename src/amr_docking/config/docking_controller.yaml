@@ -13,3 +13,8 @@ docking_controller:
     align_first_bearing_rad: 0.20
     # >0 rotates slowly to search when no marker is visible; 0 stops.
     search_yaw_rate_radps: 0.0
+    # Obstacle stop from /scan (the dock itself is ignored via dock_margin_m).
+    enable_obstacle_stop: true
+    robot_half_width_m: 0.35
+    obstacle_stop_distance_m: 0.5
+    dock_margin_m: 0.15

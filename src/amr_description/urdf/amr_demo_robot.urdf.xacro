@@ -102,5 +102,31 @@
     <child link="lidar_link"/>
     <origin xyz="0.23 0 0.175" rpy="0 0 0"/>
   </joint>
+
+  <!-- Forward-facing docking camera. camera_link is the mounting frame;
+       camera_optical_frame follows the REP-103 optical convention
+       (x right, y down, z forward) used by amr_vision. -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <box size="0.03 0.09 0.03"/>
+      </geometry>
+      <material name="lidar_black"/>
+    </visual>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.40 0 0.10" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_optical_frame"/>
+
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.57079632679 0 -1.57079632679"/>
+  </joint>
 </robot>
 

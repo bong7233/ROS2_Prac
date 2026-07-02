@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "amr_interfaces/msg/robot_state.hpp"
 #include "amr_interfaces/srv/set_battery_percentage.hpp"
 #include "diagnostic_msgs/msg/diagnostic_status.hpp"
 #include "diagnostic_updater/diagnostic_updater.hpp"
@@ -39,6 +40,8 @@ public:
     low_voltage_v_ = declare_parameter<double>("low_voltage_v", 22.0);
     critical_voltage_v_ = declare_parameter<double>("critical_voltage_v", 21.0);
     discharge_rate_vps_ = declare_parameter<double>("discharge_rate_vps", 0.002);
+    // >0 recharges while the system is in CHARGING mode (docked). 0 disables it.
+    recharge_rate_vps_ = declare_parameter<double>("recharge_rate_vps", 0.0);
     current_a_ = declare_parameter<double>("current_a", -3.5);
     temperature_c_ = declare_parameter<double>("temperature_c", 32.0);
     hardware_id_ = declare_parameter<std::string>("hardware_id", "mock_bms");
@@ -57,6 +60,12 @@ public:
     voltage_v_ = std::clamp(voltage_v_, empty_voltage_v_, nominal_voltage_v_);
 
     battery_pub_ = create_publisher<sensor_msgs::msg::BatteryState>("battery_state", rclcpp::QoS(10));
+    robot_state_sub_ = create_subscription<amr_interfaces::msg::RobotState>(
+      "robot_state",
+      rclcpp::QoS(10),
+      [this](const amr_interfaces::msg::RobotState::SharedPtr msg) {
+        charging_ = msg->mode == amr_interfaces::msg::RobotState::MODE_CHARGING;
+      });
     set_percentage_srv_ = create_service<amr_interfaces::srv::SetBatteryPercentage>(
       "set_battery_percentage",
       std::bind(
@@ -87,7 +96,12 @@ private:
     const double dt = std::max(0.0, (stamp - last_update_time_).seconds());
     last_update_time_ = stamp;
 
-    voltage_v_ = std::max(empty_voltage_v_, voltage_v_ - discharge_rate_vps_ * dt);
+    const bool recharging = charging_ && recharge_rate_vps_ > 0.0;
+    if (recharging) {
+      voltage_v_ = std::min(nominal_voltage_v_, voltage_v_ + recharge_rate_vps_ * dt);
+    } else {
+      voltage_v_ = std::max(empty_voltage_v_, voltage_v_ - discharge_rate_vps_ * dt);
+    }
 
     auto msg = sensor_msgs::msg::BatteryState();
     msg.header.stamp = stamp;
@@ -99,7 +113,9 @@ private:
     msg.design_capacity = std::numeric_limits<float>::quiet_NaN();
     msg.percentage = static_cast<float>(
       clamp01((voltage_v_ - empty_voltage_v_) / (nominal_voltage_v_ - empty_voltage_v_)));
-    msg.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;
+    msg.power_supply_status = recharging
+      ? sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_CHARGING
+      : sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;
     msg.power_supply_health = voltage_v_ <= critical_voltage_v_
       ? sensor_msgs::msg::BatteryState::POWER_SUPPLY_HEALTH_DEAD
       : sensor_msgs::msg::BatteryState::POWER_SUPPLY_HEALTH_GOOD;
@@ -161,12 +177,15 @@ private:
   double low_voltage_v_{22.0};
   double critical_voltage_v_{21.0};
   double discharge_rate_vps_{0.002};
+  double recharge_rate_vps_{0.0};
   double current_a_{-3.5};
   double temperature_c_{32.0};
   double voltage_v_{24.0};
+  bool charging_{false};
   rclcpp::Time last_update_time_;
 
   rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
+  rclcpp::Subscription<amr_interfaces::msg::RobotState>::SharedPtr robot_state_sub_;
   rclcpp::Service<amr_interfaces::srv::SetBatteryPercentage>::SharedPtr set_percentage_srv_;
   rclcpp::TimerBase::SharedPtr timer_;
   diagnostic_updater::Updater updater_;

@@ -1,5 +1,7 @@
 # Vision Docking Guide (amr_vision)
 
+English version: [Vision Docking Guide](en/10_vision_docking_guide.en.md)
+
 이 문서는 `amr_vision` 패키지가 제공하는 OpenCV 기반 ArUco 도킹 마커 인식 기능을 설명합니다. 실제 AMR이 충전 스테이션에 정밀 정렬할 때 흔히 쓰는 fiducial marker 도킹을, 이 프로젝트의 mock 우선 철학에 맞춰 하드웨어 없이 검증 가능하게 구현했습니다.
 
 ## Goal
@@ -120,6 +122,7 @@ python3 -m pytest test -q
 - `SEARCH`: 마커 미검출이면 정지(또는 `search_yaw_rate_radps`>0이면 천천히 회전).
 - `ALIGN`: 마커는 보이나 방위각이 크면 제자리 회전으로 먼저 정렬.
 - `APPROACH`: 마커가 정면이면 전진(거리에 비례해 감속)하며 방위각 보정.
+- `BLOCKED`: `/scan` 접근 코리도어에 장애물이 있으면 정지. 도킹 구조물 자체는 `dock_margin_m`로 무시해 도크를 장애물로 오인하지 않는다(`enable_obstacle_stop`으로 끌 수 있음).
 
 생성된 `/cmd_vel`은 manual jog/Nav2와 동일하게 safety monitor를 거치므로, estop/battery/timeout 게이트가 그대로 적용된다. 기본값은 `auto_start: false`이며 `/enable_docking`(`std_srvs/SetBool`)로 시작·정지한다. `dock_demo.launch.py`는 perception과 컨트롤러를 함께 띄우고 컨트롤러를 자동 시작한다.
 
@@ -135,10 +138,23 @@ cd src/amr_docking
 python3 -m pytest test -q
 ```
 
+## Closed-Loop Demo (no Gazebo)
+
+`mock_dock_camera`는 `use_odom: true`일 때 마커를 world(odom) 좌표에 고정해 두고, `/odom`으로 들어오는 로봇 실제 위치 기준으로 다시 렌더링한다. 따라서 컨트롤러가 `/cmd_vel`을 내면 `safety → base → /odom → 카메라 → 검출 → /docking_state → 컨트롤러`로 루프가 실제로 닫힌다. Gazebo 없이 mock 스택만으로 동작한다.
+
+```bash
+ros2 launch amr_docking dock_closed_loop.launch.py
+ros2 topic echo /docking_state
+ros2 topic echo /cmd_vel
+```
+
+로봇은 원점에서 출발하고 마커는 앞쪽 약간 옆(`marker_world_x`, `marker_world_y`)에 있어 `ALIGN → APPROACH → DOCKED` 진행을 볼 수 있다. world→카메라 변환 기하(`world_marker_to_camera_center`)도 ROS 없이 단위 테스트된다.
+
 ## Next Steps
 
-- mock 카메라가 `/cmd_vel_safe`나 `/odom`을 받아 마커 상대 위치를 갱신 → ROS만으로 완전한 폐루프 도킹 데모.
-- `system_manager`의 `CHARGING` 모드 및 도킹 시퀀스와 연동.
+- `amr_description`에 `camera_link`/`camera_optical_frame`을 추가해 두었다. 다음은 Gazebo 카메라 센서를 붙여 sim에서 실제 영상으로 검출까지 돌리는 것.
+- `system_manager`가 `/docking_state`를 구독해 `/robot_state.docked`로 도킹 여부를 보고하고, 도킹 시 `CHARGING` 모드로 자동 전환한다(엣지 트리거, 운영자가 모드를 바꾸면 양보; `auto_charge_when_docked`로 끌 수 있음).
+- 도킹을 `Dock.action`(피드백 phase/range, 결과) 액션 서버로 승격.
 - 마커 보드(여러 마커)로 dock-face yaw까지 안정적으로 복원.
 - `amr_description`에 카메라 링크/광학 프레임 추가, Gazebo 카메라 센서로 sim 통합.
 - 실제 카메라 드라이버(`v4l2_camera`/`usb_cam`) 연동.

@@ -1,0 +1,10 @@
+twist_mux:
+  ros__parameters:
+    output_topic: cmd_vel
+    publish_rate_hz: 30.0
+    # Parallel arrays describe each input. Highest priority recently-active wins.
+    # Manual jog overrides docking, which overrides waypoint navigation.
+    input_names: [teleop, dock, nav]
+    input_topics: [cmd_vel_teleop, cmd_vel_dock, cmd_vel_nav]
+    input_priorities: [100, 50, 10]
+    input_timeouts: [0.5, 0.5, 0.5]

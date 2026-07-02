@@ -21,10 +21,17 @@ jobs:
         run: |
           python3 -m py_compile \
             src/amr_bringup/launch/mock_robot.launch.py \
+            src/amr_bringup/launch/display.launch.py \
+            src/amr_bringup/launch/full_system.launch.py \
+            src/amr_bringup/launch/mission_demo.launch.py \
+            src/amr_mission/amr_mission/mission_coordinator.py \
+            src/amr_mission/amr_mission/mission_coordinator_node.py \
+            src/amr_mission/launch/mission_coordinator.launch.py \
             src/amr_operator_ui/launch/operator_ui.launch.py \
             src/amr_sim/launch/gazebo_amr.launch.py \
             src/amr_tools/amr_tools/fault_scenario.py \
             src/amr_tools/amr_tools/health_report.py \
+            src/amr_tools/amr_tools/report_model.py \
             src/amr_vision/amr_vision/aruco_compat.py \
             src/amr_vision/amr_vision/marker_docking.py \
             src/amr_vision/amr_vision/aruco_docking_node.py \
@@ -33,7 +40,18 @@ jobs:
             src/amr_docking/amr_docking/docking_controller.py \
             src/amr_docking/amr_docking/docking_controller_node.py \
             src/amr_docking/launch/docking_controller.launch.py \
-            src/amr_docking/launch/dock_demo.launch.py
+            src/amr_docking/launch/dock_demo.launch.py \
+            src/amr_docking/launch/dock_closed_loop.launch.py \
+            src/amr_lidar_driver/amr_lidar_driver/scan_model.py \
+            src/amr_lidar_driver/amr_lidar_driver/mock_lidar_driver_node.py \
+            src/amr_lidar_driver/launch/mock_lidar.launch.py \
+            src/amr_navigation/amr_navigation/waypoint_follower.py \
+            src/amr_navigation/amr_navigation/waypoint_follower_node.py \
+            src/amr_navigation/launch/waypoint_follower.launch.py \
+            src/amr_navigation/launch/waypoint_demo.launch.py \
+            src/amr_twist_mux/amr_twist_mux/twist_mux.py \
+            src/amr_twist_mux/amr_twist_mux/twist_mux_node.py \
+            src/amr_twist_mux/launch/twist_mux.launch.py
 
       - name: Check XML, SDF, and xacro syntax
         run: |
@@ -50,6 +68,20 @@ jobs:
                   print(path)
           print(f"checked {checked} XML-like files")
           PY
+
+      - name: Run ROS-free unit tests
+        run: |
+          python3 -m venv /tmp/rosfree
+          /tmp/rosfree/bin/pip install --quiet --upgrade pip
+          /tmp/rosfree/bin/pip install --quiet pytest opencv-contrib-python-headless numpy
+          ROOT=$PWD
+          (cd src/amr_vision && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_lidar_driver && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_navigation && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_twist_mux && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_mission && /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_docking && PYTHONPATH="$ROOT/src/amr_vision" /tmp/rosfree/bin/python -m pytest test -q)
+          (cd src/amr_tools && /tmp/rosfree/bin/python -m pytest test/test_report_model.py -q)
 
   ros2-build:
     name: ROS 2 Jazzy build

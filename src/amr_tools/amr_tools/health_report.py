@@ -5,11 +5,13 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import rclpy
-from amr_interfaces.msg import IoState, MotorState, RobotState, SafetyState
-from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
+from amr_interfaces.msg import DockingState, IoState, MotorState, RobotState, SafetyState
+from diagnostic_msgs.msg import DiagnosticArray
 from rclpy.node import Node
 from rclpy.utilities import remove_ros_args
-from sensor_msgs.msg import BatteryState
+from sensor_msgs.msg import BatteryState, LaserScan
+
+from amr_tools import report_model
 
 
 MODE_NAMES = {
@@ -42,6 +44,8 @@ class HealthReport(Node):
         self.create_subscription(SafetyState, "safety_state", self._store("safety_state"), 10)
         self.create_subscription(RobotState, "robot_state", self._store("robot_state"), 10)
         self.create_subscription(DiagnosticArray, "diagnostics", self._store("diagnostics"), 10)
+        self.create_subscription(DockingState, "docking_state", self._store("docking_state"), 10)
+        self.create_subscription(LaserScan, "scan", self._store("scan"), 10)
 
     def _store(self, name: str):
         def callback(message: Any) -> None:
@@ -68,6 +72,8 @@ class HealthReport(Node):
         self._print_io()
         self._print_motor()
         self._print_safety()
+        self._print_docking()
+        self._print_scan()
         self._print_diagnostics()
 
     def _print_topic_liveness(self, topic_timeout_s: float) -> None:
@@ -79,14 +85,15 @@ class HealthReport(Node):
             "safety_state",
             "robot_state",
             "diagnostics",
+            "docking_state",
+            "scan",
         ]:
             age = self.age_seconds(name)
-            if age is None:
+            liveness = report_model.topic_liveness(age, topic_timeout_s)
+            if liveness == "missing":
                 print(f"- /{name}: missing")
-            elif age > topic_timeout_s:
-                print(f"- /{name}: stale ({age:.2f}s)")
             else:
-                print(f"- /{name}: ok ({age:.2f}s)")
+                print(f"- /{name}: {liveness} ({age:.2f}s)")
 
     def _print_robot_state(self) -> None:
         msg = self.sample("robot_state")
@@ -96,6 +103,7 @@ class HealthReport(Node):
         print("\nRobot state")
         print(f"- mode: {mode_name}")
         print(f"- fault_active: {msg.fault_active}")
+        print(f"- docked: {msg.docked}")
         print(f"- message: {msg.message}")
 
     def _print_battery(self) -> None:
@@ -152,25 +160,41 @@ class HealthReport(Node):
         print(f"- communication_fault: {msg.communication_fault}")
         print(f"- reason: {msg.active_reason}")
 
+    def _print_docking(self) -> None:
+        msg = self.sample("docking_state")
+        if msg is None:
+            return
+        print("\nDocking")
+        print(f"- detected: {msg.detected}")
+        if msg.detected:
+            print(f"- marker_id: {msg.marker_id}")
+            print(f"- range: {msg.range_m:.3f} m")
+            print(f"- lateral_offset: {msg.lateral_offset_m:+.3f} m")
+            print(f"- bearing: {msg.bearing_rad:+.3f} rad")
+            print(f"- aligned: {msg.aligned}")
+
+    def _print_scan(self) -> None:
+        msg = self.sample("scan")
+        if msg is None:
+            return
+        summary = report_model.scan_summary(msg.ranges, msg.range_min, msg.range_max)
+        nearest = summary["nearest_m"]
+        nearest_str = "none" if nearest is None else f"{nearest:.2f} m"
+        print("\nLaser scan")
+        print(f"- beams: {summary['beams']}")
+        print(f"- valid: {summary['valid']}")
+        print(f"- nearest: {nearest_str}")
+
     def _print_diagnostics(self) -> None:
         msg = self.sample("diagnostics")
         if msg is None:
             return
-        worst_level = DiagnosticStatus.OK
-        worst_name = "none"
-        for status in msg.status:
-            if status.level >= worst_level:
-                worst_level = status.level
-                worst_name = status.name
-        level_name = {
-            DiagnosticStatus.OK: "OK",
-            DiagnosticStatus.WARN: "WARN",
-            DiagnosticStatus.ERROR: "ERROR",
-            DiagnosticStatus.STALE: "STALE",
-        }.get(worst_level, str(worst_level))
+        worst_level, worst_name = report_model.worst_diagnostic(
+            (status.level, status.name) for status in msg.status
+        )
         print("\nDiagnostics")
         print(f"- status_count: {len(msg.status)}")
-        print(f"- worst_level: {level_name}")
+        print(f"- worst_level: {report_model.level_name(worst_level)}")
         print(f"- worst_name: {worst_name}")
 
 

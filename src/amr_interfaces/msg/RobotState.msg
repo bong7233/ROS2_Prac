@@ -17,6 +17,7 @@ bool battery_low
 bool battery_critical
 bool motor_fault
 bool communication_fault
+bool docked
 
 string message
 

@@ -119,6 +119,40 @@ def optical_to_base_point(tvec: np.ndarray) -> Tuple[float, float, float]:
     return forward, left, up
 
 
+def world_marker_to_camera_center(
+    robot_x: float,
+    robot_y: float,
+    robot_yaw_rad: float,
+    marker_x: float,
+    marker_y: float,
+    marker_height_m: float = 0.0,
+    camera_forward_offset_m: float = 0.0,
+    camera_height_m: float = 0.0,
+) -> Tuple[float, float, float]:
+    """Marker center in the camera optical frame, given world poses.
+
+    Used by the mock camera to close the docking loop: the marker sits at a fixed
+    world (odom) location while the robot drives, so as the controller approaches,
+    the rendered view - and the resulting docking error - changes accordingly.
+    The camera is assumed to be mounted ``camera_forward_offset_m`` ahead of the
+    robot origin at ``camera_height_m``, looking forward.
+    """
+    cos_yaw = math.cos(robot_yaw_rad)
+    sin_yaw = math.sin(robot_yaw_rad)
+
+    cam_x = robot_x + cos_yaw * camera_forward_offset_m
+    cam_y = robot_y + sin_yaw * camera_forward_offset_m
+    dx = marker_x - cam_x
+    dy = marker_y - cam_y
+
+    forward = dx * cos_yaw + dy * sin_yaw
+    left = -dx * sin_yaw + dy * cos_yaw
+    up = marker_height_m - camera_height_m
+
+    # Base (x forward, y left, z up) -> optical (x right, y down, z forward).
+    return (-left, -up, forward)
+
+
 def compute_docking_error(tvec: np.ndarray, marker_id: int) -> DockingError:
     """Convert a marker translation into a base-frame docking error.
 

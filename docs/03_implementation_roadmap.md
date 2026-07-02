@@ -331,6 +331,17 @@ ros2 launch nav2_bringup navigation_launch.py
 - 실제 AMR 장치 통신 경험을 ROS 2 구조로 보여준다.
 - 현장 트러블슈팅 사고방식을 코드로 표현한다.
 
+## Beyond the Baseline (Implemented)
+
+baseline mock 스택 이후 추가된 인지/행동/센서 단계다. 핵심 수학은 ROS 의존성 없는 순수 Python으로 분리해 단위 테스트했고, ROS 노드는 그 위의 얇은 래퍼다.
+
+- `amr_vision` - OpenCV ArUco 도킹 마커 인식. mock 카메라로 하드웨어 없이 검출 파이프라인 동작. `/docking_state` 발행. (`docs/10`)
+- `amr_docking` - `/docking_state` 기반 정렬·접근 컨트롤러(`ALIGN/APPROACH/DOCKED`), `/scan` 장애물 정지(`BLOCKED`), odom 기반 완전 폐루프 데모. `/cmd_vel`은 기존 safety monitor를 그대로 거친다.
+- `amr_lidar_driver` - mock 2D LiDAR 시뮬레이터. Gazebo 없이 `/scan` 제공(Nav2 입력 준비).
+- `amr_tools` - health report에 docking/scan 추가, 요약 로직 순수 함수화 + 테스트.
+
+다음 후보: system_manager `CHARGING` 모드 연동, `Dock.action` 액션 서버 승격, Gazebo 카메라 센서 통합, 순수 mock 스택의 TF(robot_state_publisher) 정리로 Nav2 readiness 완성.
+
 ## Suggested GitHub Issues
 
 초기 issue로 나누기 좋은 작업:

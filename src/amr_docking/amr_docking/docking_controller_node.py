@@ -15,12 +15,15 @@ import rclpy
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
+from sensor_msgs.msg import LaserScan
 from std_srvs.srv import SetBool
 
 from amr_interfaces.msg import DockingState
 from amr_docking.docking_controller import (
     DockingControllerConfig,
     compute_docking_command,
+    forward_corridor_clearance,
+    is_path_blocked,
 )
 
 
@@ -51,11 +54,26 @@ class DockingControllerNode(Node):
             ),
         )
 
+        # Obstacle stop using /scan (the dock itself is ignored via dock margin).
+        self.enable_obstacle_stop_ = bool(
+            self.declare_parameter("enable_obstacle_stop", True).value
+        )
+        self.robot_half_width_m_ = float(
+            self.declare_parameter("robot_half_width_m", 0.35).value
+        )
+        self.obstacle_stop_distance_m_ = float(
+            self.declare_parameter("obstacle_stop_distance_m", 0.5).value
+        )
+        self.dock_margin_m_ = float(
+            self.declare_parameter("dock_margin_m", 0.15).value
+        )
+
         if self.control_rate_hz_ <= 0.0:
             raise RuntimeError("control_rate_hz must be positive")
 
         self.latest_state_ = None
         self.last_state_time_ = None
+        self.latest_scan_ = None
         self.last_phase_ = "IDLE"
 
         self.cmd_pub_ = self.create_publisher(Twist, "cmd_vel", 10)
@@ -65,6 +83,8 @@ class DockingControllerNode(Node):
         self.create_subscription(
             DockingState, "docking_state", self.on_docking_state, 10
         )
+        if self.enable_obstacle_stop_:
+            self.create_subscription(LaserScan, "scan", self.on_scan, 10)
         self.enable_srv_ = self.create_service(
             SetBool, "enable_docking", self.on_enable
         )
@@ -79,6 +99,26 @@ class DockingControllerNode(Node):
     def on_docking_state(self, msg: DockingState) -> None:
         self.latest_state_ = msg
         self.last_state_time_ = self.get_clock().now()
+
+    def on_scan(self, msg: LaserScan) -> None:
+        self.latest_scan_ = msg
+
+    def path_blocked(self, state) -> bool:
+        if not self.enable_obstacle_stop_ or self.latest_scan_ is None:
+            return False
+        clearance = forward_corridor_clearance(
+            self.latest_scan_.ranges,
+            self.latest_scan_.angle_min,
+            self.latest_scan_.angle_increment,
+            self.robot_half_width_m_,
+        )
+        return is_path_blocked(
+            clearance,
+            self.obstacle_stop_distance_m_,
+            state.range_m,
+            state.detected,
+            self.dock_margin_m_,
+        )
 
     def on_enable(self, request, response):
         self.enabled_ = request.data
@@ -107,6 +147,7 @@ class DockingControllerNode(Node):
             bearing_rad=state.bearing_rad,
             aligned=state.aligned,
             config=self.config_,
+            path_blocked=self.path_blocked(state),
         )
 
         twist = Twist()
@@ -130,7 +171,9 @@ class DockingControllerNode(Node):
         status.name = "amr_docking: controller"
         status.hardware_id = "docking_controller"
         status.level = (
-            DiagnosticStatus.WARN if phase in ("STALE", "SEARCH") else DiagnosticStatus.OK
+            DiagnosticStatus.WARN
+            if phase in ("STALE", "SEARCH", "BLOCKED")
+            else DiagnosticStatus.OK
         )
         status.message = phase
         status.values = [

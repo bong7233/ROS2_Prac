@@ -39,6 +39,10 @@ GitHub Actions CI runs static checks and a ROS 2 Jazzy `colcon build/test` on `u
 | `amr_sim` | Gazebo/YAML/Python launch | Gazebo Harmonic world and ROS-Gazebo bridge |
 | `amr_operator_ui` | C++/Qt 6 | Clickable operator console, live robot telemetry, manual jog, mode/fault services |
 | `amr_tools` | Python | FAE health report and fault scenario CLI |
+| `amr_vision` | Python/OpenCV | ArUco docking-marker detection, mock camera, `/docking_state` |
+| `amr_docking` | Python | Alignment/approach controller from `/docking_state`, emits `/cmd_vel` |
+| `amr_lidar_driver` | Python | Mock 2D LiDAR simulator, `/scan` (Nav2 input prep) |
+| `amr_navigation` | Python | Odom-based waypoint following (pure pursuit), emits `/cmd_vel` |
 
 ## Quick Start
 
@@ -85,6 +89,53 @@ ros2 run amr_tools fault_scenario motor-fault --fault-code 2310
 ros2 run amr_tools fault_scenario recover
 ```
 
+Run the vision docking pipeline (ArUco marker detection):
+
+```bash
+ros2 launch amr_vision docking_vision.launch.py
+ros2 topic echo /docking_state
+ros2 run rqt_image_view rqt_image_view /docking_debug_image
+```
+
+Run the fully closed-loop mock docking (no Gazebo): the controller drives
+`/cmd_vel` -> safety -> base -> `/odom`; the mock camera re-renders the marker
+from the new robot pose, so the loop closes and the robot does
+`ALIGN -> APPROACH -> DOCKED`. The mock LiDAR provides `/scan` for the
+controller's obstacle stop.
+
+```bash
+ros2 launch amr_docking dock_closed_loop.launch.py
+```
+
+Publish a mock laser scan on its own (Nav2 input prep without Gazebo):
+
+```bash
+ros2 launch amr_lidar_driver mock_lidar.launch.py
+ros2 topic echo /scan --once
+```
+
+Headless bringup with the core Nav2 inputs (TF, odom, scan), no Gazebo:
+
+```bash
+ros2 launch amr_bringup display.launch.py            # add rviz:=true for RViz
+ros2 run tf2_tools view_frames                        # odom -> base_link -> lidar_link/camera_link
+```
+
+`display.launch.py` adds the sensor static transforms (`base_link -> lidar_link`,
+`base_link -> camera_link`) and the mock LiDAR to `mock_robot.launch.py`. The base
+controller already publishes `odom -> base_link`, completing the `odom -> base_link
+-> laser` chain Nav2 expects.
+
+Waypoint following (odom-based autonomy without Nav2); the robot drives a square:
+
+```bash
+ros2 launch amr_navigation waypoint_demo.launch.py        # loop:=true to repeat
+ros2 topic echo /cmd_vel
+```
+
+The command flows through the safety monitor, and `/odom` feedback closes the
+loop. Start/stop with `/enable_navigation` (`std_srvs/SetBool`).
+
 Run Gazebo simulation:
 
 ```bash
@@ -106,6 +157,8 @@ Korean:
 - [FAE field guide](docs/07_fae_field_guide.md)
 - [Gazebo simulation guide](docs/08_gazebo_simulation_guide.md)
 - [Qt operator UI guide](docs/09_qt_operator_ui_guide.md)
+- [Vision docking guide](docs/10_vision_docking_guide.md)
+- [Dev environment setup (Windows -> Ubuntu/ROS 2)](docs/11_dev_environment_setup.md)
 
 English:
 
@@ -118,3 +171,4 @@ English:
 - [FAE field guide](docs/en/07_fae_field_guide.en.md)
 - [Gazebo simulation guide](docs/en/08_gazebo_simulation_guide.en.md)
 - [Qt operator UI guide](docs/en/09_qt_operator_ui_guide.en.md)
+- [Vision docking guide](docs/en/10_vision_docking_guide.en.md)
